@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useTickets } from '../../context/TicketContext';
-import { useTheme } from '../../context/ThemeContext';
-import sidebarBubblesLight from '../../assets/sidebar_bubbles_light.jpg';
 import sidebarPlanetDark from '../../assets/sidebar_planet_dark.jpg';
 import {
   LayoutDashboard,
@@ -21,8 +19,7 @@ import {
 } from 'lucide-react';
 
 export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate }) {
-  const { tabCounts } = useTickets();
-  const { isDark } = useTheme();
+  const { tabCounts, currentAgent } = useTickets();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
 
@@ -65,61 +62,38 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
   const sidebarContent = (
     <div
       className={cn(
-        'flex flex-col h-full transition-all duration-300 ease-out select-none relative overflow-hidden',
-        isDark
-          ? 'bg-[#0B0E1B] text-slate-300 border-r border-slate-800/80'
-          : 'bg-white text-slate-700 border-r border-slate-200/90 shadow-xs',
+        'flex flex-col h-full bg-[#0B0E1B] text-slate-300 border-r border-slate-800/80 transition-all duration-300 ease-out select-none relative overflow-hidden',
         sidebarWidth
       )}
     >
-      {/* Background Subtle Starfield / Light Atmosphere Glow */}
+      {/* Background Subtle Starfield & Cosmic Planet Glow */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {isDark ? (
-          <>
-            {/* Cosmic Faint Stars */}
-            <div className="absolute top-12 left-10 w-1 h-1 bg-white/40 rounded-full" />
-            <div className="absolute top-36 right-8 w-1 h-1 bg-indigo-300/50 rounded-full" />
-            <div className="absolute top-52 left-6 w-1.5 h-1.5 bg-blue-200/30 rounded-full" />
-            <div className="absolute bottom-64 right-12 w-1 h-1 bg-purple-200/40 rounded-full" />
-            <div className="absolute bottom-40 left-8 w-1 h-1 bg-white/30 rounded-full" />
+        {/* Faint Stars */}
+        <div className="absolute top-12 left-10 w-1 h-1 bg-white/40 rounded-full" />
+        <div className="absolute top-36 right-8 w-1 h-1 bg-indigo-300/50 rounded-full" />
+        <div className="absolute top-52 left-6 w-1.5 h-1.5 bg-blue-200/30 rounded-full" />
+        <div className="absolute bottom-64 right-12 w-1 h-1 bg-purple-200/40 rounded-full" />
+        <div className="absolute bottom-40 left-8 w-1 h-1 bg-white/30 rounded-full" />
 
-            {/* Dark Mode Cosmic Planet */}
-            <div
-              className={cn(
-                'absolute -left-12 sm:-left-10 top-[59%] -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 rounded-full pointer-events-none transition-all duration-500 overflow-hidden',
-                isCollapsed ? 'opacity-40 scale-75 -left-16' : 'opacity-95'
-              )}
-            >
-              <img
-                src={sidebarPlanetDark}
-                alt="Sidebar Cosmic Planet"
-                className="w-full h-full object-cover rounded-full mix-blend-screen select-none filter contrast-125 brightness-110"
-              />
-              <div className="absolute inset-0 rounded-full pointer-events-none shadow-[0_0_45px_rgba(168,85,247,0.35)]" />
-            </div>
-          </>
-        ) : (
-          <>
-            {/* Full-Height Stream of Colorful Iridescent Bubbles across entire sidebar */}
-            <img
-              src={sidebarBubblesLight || '/sidebar_bubbles_light.jpg'}
-              alt="Colorful Bubbles Background"
-              className="absolute inset-0 w-full h-full object-cover object-center mix-blend-multiply opacity-75 select-none pointer-events-none"
-            />
-            {/* Soft luminous white veil so text has 100% contrast and never disappears */}
-            <div className="absolute inset-0 bg-gradient-to-r from-white/65 via-white/45 to-white/65 pointer-events-none" />
-          </>
-        )}
+        {/* Previous Cosmic Planet Image with soft glowing purple aura */}
+        <div
+          className={cn(
+            'absolute -left-12 sm:-left-10 top-[56%] -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 rounded-full pointer-events-none transition-all duration-500 overflow-hidden',
+            isCollapsed ? 'opacity-40 scale-75 -left-16' : 'opacity-95'
+          )}
+        >
+          <img
+            src={sidebarPlanetDark}
+            alt="Sidebar Cosmic Planet"
+            className="w-full h-full object-cover rounded-full mix-blend-screen select-none filter contrast-125 brightness-110"
+          />
+          <div className="absolute inset-0 rounded-full pointer-events-none shadow-[0_0_45px_rgba(168,85,247,0.35)]" />
+        </div>
       </div>
 
       {/* Brand Header */}
       {isCollapsed ? (
-        <div
-          className={cn(
-            'h-16 flex items-center justify-center border-b flex-shrink-0 relative z-10 w-full px-2 transition-colors duration-200',
-            isDark ? 'border-slate-800/60' : 'border-slate-200/80'
-          )}
-        >
+        <div className="h-16 flex items-center justify-center border-b border-slate-800/60 flex-shrink-0 relative z-10 w-full px-2">
           {/* Logo converted into Drawer Opening Bar Button when collapsed */}
           <button
             type="button"
@@ -145,12 +119,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
           </button>
         </div>
       ) : (
-        <div
-          className={cn(
-            'h-16 px-4 flex items-center justify-between border-b flex-shrink-0 relative z-10 transition-colors duration-200',
-            isDark ? 'border-slate-800/60' : 'border-slate-200/80'
-          )}
-        >
+        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/60 flex-shrink-0 relative z-10">
           <div
             onClick={() => onNavigate?.('landing')}
             className={cn(
@@ -165,20 +134,10 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
             </div>
 
             <div className="min-w-0 animate-in fade-in duration-150">
-              <span
-                className={cn(
-                  'font-bold text-sm tracking-tight block leading-tight truncate',
-                  isDark ? 'text-white' : 'text-slate-900'
-                )}
-              >
+              <span className="font-bold text-sm tracking-tight text-white block leading-tight truncate">
                 Datastraw
               </span>
-              <span
-                className={cn(
-                  'text-[10px] font-semibold tracking-wider uppercase block truncate',
-                  isDark ? 'text-cyan-400' : 'text-indigo-600'
-                )}
-              >
+              <span className="text-[10px] text-cyan-400 font-semibold tracking-wider uppercase block truncate">
                 Support CRM
               </span>
             </div>
@@ -190,12 +149,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
               <button
                 type="button"
                 onClick={onClose}
-                className={cn(
-                  'md:hidden p-1.5 rounded-lg transition-colors',
-                  isDark
-                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                    : 'text-slate-500 hover:text-slate-900 hover:bg-slate-100'
-                )}
+                className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                 aria-label="Close menu"
               >
                 <X className="w-4 h-4" />
@@ -206,12 +160,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
             <button
               type="button"
               onClick={() => setIsCollapsed(true)}
-              className={cn(
-                'hidden md:flex p-1.5 rounded-lg transition-colors',
-                isDark
-                  ? 'text-slate-400 hover:text-white hover:bg-slate-800/80'
-                  : 'text-slate-400 hover:text-slate-800 hover:bg-slate-100'
-              )}
+              className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
               title="Collapse sidebar"
               aria-label="Collapse sidebar"
             >
@@ -244,21 +193,15 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
                   'w-full flex items-center px-3 py-2.5 text-xs font-medium rounded-xl transition-all duration-200 select-none relative group',
                   isCollapsed ? 'justify-center px-2' : 'justify-between',
                   isActive
-                    ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
-                    : isDark
-                    ? 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    : 'text-slate-800 hover:text-slate-950 hover:bg-white/90 backdrop-blur-[2px] font-semibold'
+                    ? 'bg-indigo-600 text-white font-semibold shadow-lg shadow-indigo-600/30'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <Icon
                     className={cn(
                       'w-4 h-4 flex-shrink-0 transition-transform duration-200 group-hover:scale-105',
-                      isActive
-                        ? 'text-white'
-                        : isDark
-                        ? 'text-slate-400 group-hover:text-slate-200'
-                        : 'text-slate-700 group-hover:text-slate-950'
+                      isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-200'
                     )}
                   />
                   {!isCollapsed && <span className="truncate">{item.label}</span>}
@@ -270,9 +213,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
                       'text-[11px] font-semibold px-2 py-0.5 rounded-full transition-transform',
                       isActive
                         ? 'bg-white/20 text-white'
-                        : isDark
-                        ? 'bg-indigo-950/90 text-indigo-300 border border-indigo-800/60'
-                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200/70 font-semibold'
+                        : 'bg-indigo-950/90 text-indigo-300 border border-indigo-800/60'
                     )}
                   >
                     {item.badge}
@@ -281,12 +222,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
 
                 {/* Collapsed Dot Badge */}
                 {isCollapsed && item.badge !== undefined && item.badge > 0 && (
-                  <span
-                    className={cn(
-                      'absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500 ring-2',
-                      isDark ? 'ring-[#0B0E1B]' : 'ring-white'
-                    )}
-                  />
+                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-500 ring-2 ring-[#0B0E1B]" />
                 )}
               </button>
 
@@ -305,56 +241,22 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
       {/* Upgrade to Pro Card */}
       {!isCollapsed && (
         <div className="p-3.5 flex-shrink-0 relative z-10 animate-in fade-in duration-200">
-          <div
-            className={cn(
-              'p-4 rounded-2xl shadow-xl space-y-2.5 relative overflow-hidden group border transition-colors duration-200',
-              isDark
-                ? 'bg-gradient-to-b from-[#141829] to-[#0E1222] border-indigo-500/20 text-white'
-                : 'bg-gradient-to-b from-indigo-50/70 via-purple-50/40 to-white border-indigo-100/90 shadow-indigo-950/5 text-slate-900'
-            )}
-          >
+          <div className="p-4 rounded-2xl bg-gradient-to-b from-[#141829] to-[#0E1222] border border-indigo-500/20 shadow-xl space-y-2.5 relative overflow-hidden group">
             {/* Sparkle Glow Backdrop */}
-            <div
-              className={cn(
-                'absolute -top-6 -right-6 w-20 h-20 rounded-full blur-xl pointer-events-none',
-                isDark ? 'bg-indigo-500/20' : 'bg-purple-400/20'
-              )}
-            />
+            <div className="absolute -top-6 -right-6 w-20 h-20 bg-indigo-500/20 rounded-full blur-xl pointer-events-none" />
 
-            <div
-              className={cn(
-                'w-7 h-7 rounded-lg border flex items-center justify-center',
-                isDark
-                  ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300'
-                  : 'bg-indigo-100/80 border-indigo-200/80 text-indigo-600'
-              )}
-            >
+            <div className="w-7 h-7 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center text-indigo-300">
               <Sparkles className="w-4 h-4" />
             </div>
 
             <div>
-              <h4
-                className={cn(
-                  'text-xs font-bold leading-tight',
-                  isDark ? 'text-white' : 'text-slate-900'
-                )}
-              >
+              <h4 className="text-xs font-bold text-white leading-tight">
                 Better Support
               </h4>
-              <h4
-                className={cn(
-                  'text-xs font-bold leading-tight',
-                  isDark ? 'text-white' : 'text-slate-900'
-                )}
-              >
+              <h4 className="text-xs font-bold text-white leading-tight">
                 Happier Customers
               </h4>
-              <p
-                className={cn(
-                  'text-[11px] mt-1 leading-snug',
-                  isDark ? 'text-slate-400' : 'text-slate-500'
-                )}
-              >
+              <p className="text-[11px] text-slate-400 mt-1 leading-snug">
                 Turn conversations into loyal customers with Datastraw.
               </p>
             </div>
@@ -372,18 +274,10 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
       )}
 
       {/* User Profile Pill at Bottom */}
-      <div
-        className={cn(
-          'p-3 border-t flex-shrink-0 relative z-10 transition-colors duration-200',
-          isDark
-            ? 'bg-[#0B0E1B] border-slate-800/80'
-            : 'bg-white border-slate-200/80'
-        )}
-      >
+      <div className="p-3 border-t border-slate-800/80 flex-shrink-0 relative z-10 bg-[#0B0E1B]">
         <div
           className={cn(
-            'flex items-center gap-3 p-2 rounded-xl transition-colors cursor-pointer',
-            isDark ? 'hover:bg-slate-800/60' : 'hover:bg-slate-100/80',
+            'flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/60 transition-colors cursor-pointer',
             isCollapsed && 'justify-center p-1.5'
           )}
         >
@@ -394,20 +288,10 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
 
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
-              <p
-                className={cn(
-                  'text-xs font-semibold truncate leading-tight',
-                  isDark ? 'text-white' : 'text-slate-900'
-                )}
-              >
+              <p className="text-xs font-semibold text-white truncate leading-tight">
                 Shubham Dubey
               </p>
-              <p
-                className={cn(
-                  'text-[11px] truncate leading-tight mt-0.5',
-                  isDark ? 'text-slate-400' : 'text-slate-500'
-                )}
-              >
+              <p className="text-[11px] text-slate-400 truncate leading-tight mt-0.5">
                 Support Agent
               </p>
             </div>
@@ -416,10 +300,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
           {!isCollapsed && (
             <button
               type="button"
-              className={cn(
-                'p-1 rounded transition-colors',
-                isDark ? 'text-slate-400 hover:text-white' : 'text-slate-400 hover:text-slate-800'
-              )}
+              className="text-slate-400 hover:text-white p-1 rounded transition-colors"
               aria-label="User settings"
             >
               <MoreVertical className="w-4 h-4" />
