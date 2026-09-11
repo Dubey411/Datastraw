@@ -10,9 +10,6 @@ export function ThemeProvider({ children }) {
       if (stored === 'dark' || stored === 'light') {
         return stored;
       }
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        return 'dark';
-      }
     } catch (e) {
       console.warn('Failed to access theme localStorage:', e);
     }
