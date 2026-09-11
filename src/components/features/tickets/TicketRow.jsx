@@ -1,13 +1,19 @@
 import React from 'react';
 import { cn } from '../../../utils/cn';
-import { Avatar } from '../../common/Avatar';
 import { StatusBadge, PriorityBadge, CategoryBadge } from '../../common/Badge';
-import { Clock, ChevronRight } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 
-export function TicketRow({ ticket, isSelected, onSelect, index = 0 }) {
-  // Format relative timestamp
+export function TicketRow({
+  ticket,
+  isSelected,
+  isChecked = false,
+  onToggleCheck,
+  onSelect,
+  index = 0,
+}) {
+  // Format relative timestamp to match reference screenshot style
   const formatTime = (isoString) => {
-    if (!isoString) return '';
+    if (!isoString) return 'Yesterday';
     const date = new Date(isoString);
     const now = new Date();
     const diffMs = now - date;
@@ -15,127 +21,140 @@ export function TicketRow({ ticket, isSelected, onSelect, index = 0 }) {
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
 
-    if (diffMins < 1) return 'Just now';
     if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffHours < 24) return `${diffHours} hours ago`;
     if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    if (diffDays > 1) return `${diffDays} days ago`;
+    return 'Yesterday';
   };
 
-  const animationDelay = `${Math.min(index * 35, 350)}ms`;
+  // Customer initials
+  const getInitials = (name) => {
+    if (!name) return 'CU';
+    const parts = name.split(' ');
+    if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    return name.slice(0, 2).toUpperCase();
+  };
+
+  // Avatar background colors matching reference screenshot
+  const getAvatarBg = (name) => {
+    const initials = getInitials(name);
+    switch (initials) {
+      case 'PR':
+        return 'bg-rose-500 text-white';
+      case 'AK':
+        return 'bg-teal-600 text-white';
+      case 'RJ':
+        return 'bg-emerald-600 text-white';
+      case 'NP':
+        return 'bg-purple-600 text-white';
+      case 'KT':
+        return 'bg-pink-600 text-white';
+      case 'SC':
+        return 'bg-amber-500 text-white';
+      default:
+        return 'bg-indigo-600 text-white';
+    }
+  };
 
   return (
-    <div
+    <tr
       onClick={() => onSelect(ticket.id)}
-      role="button"
-      tabIndex={0}
-      style={{ animationDelay }}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onSelect(ticket.id);
-        }
-      }}
       className={cn(
-        'group relative w-full text-left transition-all duration-200 cursor-pointer border-b border-slate-100 dark:border-dark-border select-none outline-none animate-in fade-in slide-in-from-bottom-1.5 duration-250',
-        'hover:bg-slate-50/80 dark:hover:bg-dark-surface-hover focus-visible:bg-slate-50 dark:focus-visible:bg-dark-surface-hover focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500',
-        isSelected
-          ? 'bg-indigo-50/40 dark:bg-indigo-950/40 hover:bg-indigo-50/60 dark:hover:bg-indigo-950/50'
-          : 'bg-white dark:bg-dark-surface'
+        'group transition-colors duration-150 cursor-pointer border-b border-slate-100 dark:border-dark-border text-xs select-none',
+        'hover:bg-slate-50/80 dark:hover:bg-slate-800/50',
+        isSelected && 'bg-indigo-50/50 dark:bg-indigo-950/40',
+        isChecked && 'bg-indigo-50/30 dark:bg-indigo-950/30'
       )}
     >
-      {/* Active Left Indicator Bar */}
-      {isSelected && (
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-indigo-600 dark:bg-indigo-400" />
-      )}
+      {/* Checkbox */}
+      <td
+        className="py-3.5 pl-4 pr-2 w-10 text-center"
+        onClick={(e) => {
+          e.stopPropagation();
+          onToggleCheck?.(ticket.id);
+        }}
+      >
+        <input
+          type="checkbox"
+          checked={isChecked}
+          onChange={() => {}}
+          className="w-4 h-4 rounded border-slate-300 dark:border-slate-600 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
+        />
+      </td>
 
-      {/* Desktop Layout */}
-      <div className="hidden lg:flex items-center justify-between px-5 py-3.5 gap-4">
-        {/* Left: ID & Customer & Subject */}
-        <div className="flex items-center gap-3.5 min-w-0 flex-1">
-          {/* Customer Avatar with subtle scale on row hover */}
-          <div className="transition-transform duration-200 group-hover:scale-105">
-            <Avatar
-              name={ticket.customer?.name}
-              size="md"
-              className="flex-shrink-0"
-            />
+      {/* Ticket ID # */}
+      <td className="py-3.5 px-3 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200">
+        <span className="font-semibold text-xs tracking-tight">{ticket.id}</span>
+      </td>
+
+      {/* Customer Avatar & Name & Email */}
+      <td className="py-3.5 px-3 min-w-[180px]">
+        <div className="flex items-center gap-2.5">
+          <div
+            className={cn(
+              'w-7 h-7 rounded-full flex items-center justify-center font-bold text-[11px] flex-shrink-0 shadow-2xs',
+              getAvatarBg(ticket.customer?.name)
+            )}
+          >
+            {getInitials(ticket.customer?.name)}
           </div>
-
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-xs font-bold text-slate-900 dark:text-dark-text bg-slate-100/90 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200/60 dark:border-slate-700 flex-shrink-0">
-                {ticket.id}
-              </span>
-              <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate max-w-[130px]">
-                {ticket.customer?.name}
-              </span>
-              <span className="text-slate-300 dark:text-slate-600">•</span>
-              <h4 className="text-xs font-medium text-slate-900 dark:text-dark-text truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                {ticket.subject}
-              </h4>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-2xl">
-              {ticket.description}
+          <div className="min-w-0">
+            <p className="text-xs font-semibold text-slate-900 dark:text-dark-text truncate leading-tight">
+              {ticket.customer?.name}
+            </p>
+            <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate leading-tight mt-0.5">
+              {ticket.customer?.email}
             </p>
           </div>
         </div>
+      </td>
 
-        {/* Right: Badges + Timestamp */}
-        <div className="flex items-center gap-3 flex-shrink-0">
-          <CategoryBadge category={ticket.category} />
-          <PriorityBadge priority={ticket.priority} size="sm" />
-          <StatusBadge status={ticket.status} size="sm" />
-          <span className="text-xs text-slate-400 dark:text-slate-500 min-w-[65px] text-right font-medium">
-            {formatTime(ticket.updatedAt || ticket.createdAt)}
-          </span>
-          <ChevronRight className="w-4 h-4 text-slate-300 dark:text-slate-600 group-hover:text-slate-500 dark:group-hover:text-slate-300 group-hover:translate-x-0.5 transition-all duration-200" />
-        </div>
-      </div>
+      {/* Subject & snippet */}
+      <td className="py-3.5 px-3 max-w-[280px]">
+        <p className="text-xs font-semibold text-slate-900 dark:text-dark-text truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+          {ticket.subject}
+        </p>
+        <p className="text-[11px] text-slate-400 dark:text-slate-500 truncate mt-0.5">
+          {ticket.description}
+        </p>
+      </td>
 
-      {/* Mobile & Tablet Layout (Stacked Card) */}
-      <div className="lg:hidden p-4 space-y-2.5">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <Avatar
-              name={ticket.customer?.name}
-              size="sm"
-            />
-            <div className="min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[11px] font-bold text-slate-900 dark:text-dark-text bg-slate-100 dark:bg-slate-800 px-1 rounded">
-                  {ticket.id}
-                </span>
-                <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">
-                  {ticket.customer?.name}
-                </span>
-              </div>
-            </div>
-          </div>
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium whitespace-nowrap">
-            {formatTime(ticket.updatedAt || ticket.createdAt)}
-          </span>
-        </div>
+      {/* Status */}
+      <td className="py-3.5 px-3 whitespace-nowrap">
+        <StatusBadge status={ticket.status} size="sm" />
+      </td>
 
-        <div className="space-y-1">
-          <h4 className="text-xs font-semibold text-slate-900 dark:text-dark-text line-clamp-1 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-            {ticket.subject}
-          </h4>
-          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
-            {ticket.description}
-          </p>
-        </div>
+      {/* Priority */}
+      <td className="py-3.5 px-3 whitespace-nowrap">
+        <PriorityBadge priority={ticket.priority} size="sm" />
+      </td>
 
-        <div className="pt-1 flex flex-wrap items-center justify-between gap-2 border-t border-slate-50 dark:border-dark-border">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <StatusBadge status={ticket.status} size="sm" />
-            <PriorityBadge priority={ticket.priority} size="sm" />
-          </div>
-          <CategoryBadge category={ticket.category} />
-        </div>
-      </div>
-    </div>
+      {/* Category */}
+      <td className="py-3.5 px-3 whitespace-nowrap">
+        <CategoryBadge category={ticket.category} />
+      </td>
+
+      {/* Updated */}
+      <td className="py-3.5 px-3 whitespace-nowrap text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+        {ticket.displayUpdated || formatTime(ticket.updatedAt || ticket.createdAt)}
+      </td>
+
+      {/* Actions */}
+      <td className="py-3.5 pl-2 pr-4 text-right whitespace-nowrap">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(ticket.id);
+          }}
+          className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+          aria-label="More ticket actions"
+        >
+          <MoreHorizontal className="w-4 h-4" />
+        </button>
+      </td>
+    </tr>
   );
 }
+
