@@ -13,7 +13,7 @@ import { SettingsView } from '../features/settings/SettingsView';
 import { Button } from '../common/Button';
 import { Plus } from 'lucide-react';
 
-export function AppLayout() {
+export function AppLayout({ onNavigate }) {
   const [activeView, setActiveView] = useState('dashboard');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -74,13 +74,17 @@ export function AppLayout() {
       <Sidebar
         activeView={activeView}
         onViewChange={(view) => setActiveView(view)}
+        onNavigate={onNavigate}
         isOpen={isMobileMenuOpen}
         onClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Main Content Layout */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Header onOpenMobileMenu={() => setIsMobileMenuOpen(true)} />
+        <Header
+          onOpenMobileMenu={() => setIsMobileMenuOpen(true)}
+          onNavigate={onNavigate}
+        />
 
         {/* Scrollable Main Area */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
