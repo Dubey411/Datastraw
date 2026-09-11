@@ -105,19 +105,19 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
             <div className="absolute top-28 -left-6 w-24 h-24 rounded-full bg-cyan-200/30 blur-2xl pointer-events-none" />
             <div className="absolute bottom-48 -right-6 w-28 h-28 rounded-full bg-purple-200/25 blur-2xl pointer-events-none" />
 
-            {/* Light Mode Pearlescent White Iridescent Orb */}
+            {/* Light Mode Pearlescent White Iridescent Orb Artwork */}
             <div
               className={cn(
-                'absolute -left-12 sm:-left-10 top-[54%] -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 rounded-full pointer-events-none transition-all duration-500',
-                isCollapsed ? 'opacity-35 scale-75 -left-16' : 'opacity-90'
+                'absolute -left-10 sm:-left-8 top-[52%] -translate-y-1/2 w-44 h-44 sm:w-48 sm:h-48 pointer-events-none transition-all duration-500',
+                isCollapsed ? 'opacity-30 scale-75 -left-16' : 'opacity-90'
               )}
             >
               <img
-                src={sidebarOrbLight}
+                src={sidebarOrbLight || '/sidebar_orb_light.png'}
                 alt="Sidebar Light Orb"
-                className="w-full h-full object-cover rounded-full mix-blend-multiply select-none filter brightness-105"
+                className="w-full h-full object-contain mix-blend-multiply select-none"
               />
-              <div className="absolute inset-0 rounded-full pointer-events-none shadow-[0_0_35px_rgba(147,51,234,0.15)]" />
+              <div className="absolute inset-0 rounded-full pointer-events-none shadow-[0_0_40px_rgba(168,85,247,0.12)]" />
             </div>
           </>
         )}
