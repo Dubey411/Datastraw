@@ -17,9 +17,11 @@ import {
   ShieldCheck,
   Sun,
   Moon,
+  Globe,
+  LogOut,
 } from 'lucide-react';
 
-export function Header({ onOpenMobileMenu }) {
+export function Header({ onOpenMobileMenu, onNavigate }) {
   const {
     searchQuery,
     setSearchQuery,
@@ -304,6 +306,18 @@ export function Header({ onOpenMobileMenu }) {
                 <button
                   type="button"
                   onClick={() => {
+                    setIsProfileOpen(false);
+                    onNavigate?.('landing');
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-surface-hover hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors text-left"
+                >
+                  <Globe className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Landing Page</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
                     restoreSampleData();
                     setIsProfileOpen(false);
                   }}
@@ -312,6 +326,19 @@ export function Header({ onOpenMobileMenu }) {
                   <RotateCcw className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                   <span>Reset Demo Tickets</span>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    onNavigate?.('login');
+                  }}
+                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors text-left"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Sign Out</span>
+                </button>
+
                 <div className="px-2.5 py-1.5 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500">
                   <span>Fast SLA Mode</span>
                   <ShieldCheck className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
