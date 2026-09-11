@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useTickets } from '../../context/TicketContext';
-import sidebarPlanetDark from '../../assets/sidebar_planet_dark.jpg';
 import {
   LayoutDashboard,
   Inbox,
@@ -75,19 +74,15 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
         <div className="absolute bottom-64 right-12 w-1 h-1 bg-purple-200/40 rounded-full" />
         <div className="absolute bottom-40 left-8 w-1 h-1 bg-white/30 rounded-full" />
 
-        {/* Previous Cosmic Planet Image with soft glowing purple aura */}
+        {/* Planet with soft glowing purple aura */}
         <div
           className={cn(
-            'absolute -left-12 sm:-left-10 top-[56%] -translate-y-1/2 w-32 h-32 sm:w-36 sm:h-36 rounded-full pointer-events-none transition-all duration-500 overflow-hidden',
-            isCollapsed ? 'opacity-40 scale-75 -left-16' : 'opacity-95'
+            'absolute -left-10 top-[52%] -translate-y-1/2 w-28 h-28 rounded-full bg-gradient-to-tr from-slate-950 via-[#1E1645] to-[#4338CA] shadow-[0_0_50px_rgba(99,102,241,0.25)] border border-indigo-500/20 opacity-80 pointer-events-none transition-all duration-300',
+            isCollapsed && 'opacity-60 scale-90 -left-8'
           )}
         >
-          <img
-            src={sidebarPlanetDark}
-            alt="Sidebar Cosmic Planet"
-            className="w-full h-full object-cover rounded-full mix-blend-screen select-none filter contrast-125 brightness-110"
-          />
-          <div className="absolute inset-0 rounded-full pointer-events-none shadow-[0_0_45px_rgba(168,85,247,0.35)]" />
+          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-transparent via-transparent to-slate-950/80" />
+          <div className="absolute top-3 right-4 w-6 h-6 rounded-full bg-indigo-400/20 blur-sm" />
         </div>
       </div>
 
