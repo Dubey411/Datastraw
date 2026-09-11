@@ -17,7 +17,7 @@ import {
   Hexagon,
 } from 'lucide-react';
 
-export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
+export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate }) {
   const { tabCounts, currentAgent } = useTickets();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -83,9 +83,16 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose }) {
 
       {/* Brand Header */}
       <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/60 flex-shrink-0 relative z-10">
-        <div className="flex items-center gap-3 min-w-0">
+        <div
+          onClick={() => onNavigate?.('landing')}
+          className={cn(
+            'flex items-center gap-3 min-w-0',
+            onNavigate && 'cursor-pointer group'
+          )}
+          title="Go to Datastraw Landing Page"
+        >
           {/* Hexagonal Blue/Cyan Logo */}
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 flex-shrink-0 transition-transform duration-200 hover:scale-105">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 flex-shrink-0 transition-transform duration-200 group-hover:scale-105">
             <Hexagon className="w-4 h-4 fill-white/20 stroke-white stroke-[2.5]" />
           </div>
 
