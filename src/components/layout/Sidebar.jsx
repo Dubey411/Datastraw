@@ -10,6 +10,7 @@ import {
   Settings,
   ChevronsLeft,
   ChevronsRight,
+  PanelLeftOpen,
   MoreVertical,
   Sparkles,
   ArrowRight,
@@ -82,21 +83,45 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
       </div>
 
       {/* Brand Header */}
-      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/60 flex-shrink-0 relative z-10">
-        <div
-          onClick={() => onNavigate?.('landing')}
-          className={cn(
-            'flex items-center gap-3 min-w-0',
-            onNavigate && 'cursor-pointer group'
-          )}
-          title="Go to Datastraw Landing Page"
-        >
-          {/* Hexagonal Blue/Cyan Logo */}
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 flex-shrink-0 transition-transform duration-200 group-hover:scale-105">
-            <Hexagon className="w-4 h-4 fill-white/20 stroke-white stroke-[2.5]" />
-          </div>
+      {isCollapsed ? (
+        <div className="h-16 flex items-center justify-center border-b border-slate-800/60 flex-shrink-0 relative z-10 w-full px-2">
+          {/* Logo converted into Drawer Opening Bar Button when collapsed */}
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(false)}
+            className="group relative w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 hover:from-blue-500 hover:via-indigo-500 hover:to-cyan-300 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 hover:shadow-cyan-400/40 transition-all duration-200 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-cyan-400/60"
+            title="Open Sidebar Drawer"
+            aria-label="Open Sidebar Drawer"
+          >
+            {/* Drawer Opening Bar Icon */}
+            <PanelLeftOpen className="w-5 h-5 text-white transition-transform duration-200 group-hover:translate-x-0.5" />
 
-          {!isCollapsed && (
+            {/* Glowing cyan indicator dot */}
+            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-cyan-400 rounded-full border-2 border-[#0B0E1B] shadow-sm shadow-cyan-400/80 animate-pulse" />
+
+            {/* Floating Tooltip matching other collapsed icons */}
+            <div className="absolute left-full ml-3 px-3 py-1.5 bg-[#0B0E1B] text-white text-xs font-semibold rounded-lg shadow-2xl border border-slate-700/90 whitespace-nowrap z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150 flex items-center gap-2">
+              <PanelLeftOpen className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Open Sidebar Drawer</span>
+              <kbd className="px-1.5 py-0.5 text-[9px] font-mono bg-slate-800 text-slate-300 rounded border border-slate-700">Click</kbd>
+            </div>
+          </button>
+        </div>
+      ) : (
+        <div className="h-16 px-4 flex items-center justify-between border-b border-slate-800/60 flex-shrink-0 relative z-10">
+          <div
+            onClick={() => onNavigate?.('landing')}
+            className={cn(
+              'flex items-center gap-3 min-w-0',
+              onNavigate && 'cursor-pointer group'
+            )}
+            title="Go to Datastraw Landing Page"
+          >
+            {/* Hexagonal Blue/Cyan Logo */}
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-indigo-600/30 flex-shrink-0 transition-transform duration-200 group-hover:scale-105">
+              <Hexagon className="w-4 h-4 fill-white/20 stroke-white stroke-[2.5]" />
+            </div>
+
             <div className="min-w-0 animate-in fade-in duration-150">
               <span className="font-bold text-sm tracking-tight text-white block leading-tight truncate">
                 Datastraw
@@ -105,32 +130,34 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
                 Support CRM
               </span>
             </div>
-          )}
+          </div>
+
+          <div className="flex items-center gap-1">
+            {/* Mobile close button */}
+            {onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                aria-label="Close menu"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Desktop Collapse Toggle << */}
+            <button
+              type="button"
+              onClick={() => setIsCollapsed(true)}
+              className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
+              title="Collapse sidebar"
+              aria-label="Collapse sidebar"
+            >
+              <ChevronsLeft className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-
-        {/* Mobile close button */}
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="md:hidden p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-            aria-label="Close menu"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        )}
-
-        {/* Desktop Collapse Toggle << or >> */}
-        <button
-          type="button"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="hidden md:flex p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors"
-          title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {isCollapsed ? <ChevronsRight className="w-4 h-4" /> : <ChevronsLeft className="w-4 h-4" />}
-        </button>
-      </div>
+      )}
 
       {/* Navigation Links */}
       <div className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto relative z-10">
