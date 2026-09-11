@@ -243,30 +243,45 @@ export function AuthPage({ initialMode = 'login', onNavigate }) {
             </div>
 
             {/* Testimonial card + Hand-drawn Arrow + Mini Dashboard Preview */}
-            <div className="relative pt-4">
+            <div className="relative pt-12 sm:pt-14">
               {/* Floating Testimonial Card */}
               <div
                 className={cn(
-                  'absolute -top-3 right-8 z-20 p-3.5 rounded-2xl border shadow-lg backdrop-blur-md max-w-xs hidden sm:block',
+                  'absolute -top-4 left-2 sm:left-6 z-20 p-3.5 rounded-2xl border shadow-sm backdrop-blur-md max-w-[230px] hidden sm:block',
                   isDark
                     ? 'bg-slate-900/90 border-slate-700/80 text-white'
-                    : 'bg-white/95 border-slate-200 text-slate-800'
+                    : 'bg-white/95 border-slate-200/90 text-slate-800 shadow-indigo-950/5'
                 )}
               >
-                <p className="text-[11px] italic font-medium leading-snug">
+                <p className="text-[11px] italic font-medium leading-snug text-slate-700 dark:text-slate-300">
                   "Datastraw has completely transformed how we support our customers."
                 </p>
-                <p className="text-[10px] text-slate-400 font-semibold mt-1">— Product Team</p>
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-semibold mt-1">
+                  — Product Team
+                </p>
               </div>
 
               {/* Hand-drawn Curly Arrow pointing to dashboard */}
-              <div className="absolute top-12 right-24 hidden md:flex items-center gap-1.5 z-20 pointer-events-none">
-                <span className="font-handwriting text-xs text-indigo-500 italic rotate-12">
-                  Turn support into growth
+              <div className="absolute top-0 right-4 sm:right-10 hidden md:flex items-center gap-1.5 z-20 pointer-events-none select-none">
+                <span className="font-handwriting text-xs text-indigo-500 dark:text-indigo-400 font-medium italic text-right leading-tight transform -rotate-6">
+                  Turn support<br />into growth
                 </span>
-                <svg width="30" height="24" viewBox="0 0 30 24" fill="none" className="text-indigo-500">
-                  <path d="M 4 4 Q 18 18 24 20" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" fill="none" />
-                  <path d="M 18 21 L 24 20 L 22 14" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                <svg width="34" height="34" viewBox="0 0 34 34" fill="none" className="text-indigo-500 dark:text-indigo-400">
+                  <path
+                    d="M 6 8 C 16 12, 24 18, 24 28"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    fill="none"
+                  />
+                  <path
+                    d="M 18 26 L 24 28 L 26 22"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    fill="none"
+                  />
                 </svg>
               </div>
 
