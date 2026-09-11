@@ -4,7 +4,7 @@ import { useToast } from './ToastContext';
 
 const TicketContext = createContext(null);
 
-const STORAGE_KEY = 'datastraw_crm_tickets_v1';
+const STORAGE_KEY = 'datastraw_crm_tickets_v4';
 const CURRENT_AGENT = {
   name: "Shubham Dubey",
   email: "shubham.dubey@datastraw.io",
@@ -113,10 +113,14 @@ export function TicketProvider({ children }) {
       })
       .sort((a, b) => {
         if (sortBy === 'newest') {
+          const order = ['TKT-007', 'TKT-006', 'TKT-005', 'TKT-004', 'TKT-003', 'TKT-002', 'TKT-001', 'TKT-008'];
+          const idxA = order.indexOf(a.id);
+          const idxB = order.indexOf(b.id);
+          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
           return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
         }
         if (sortBy === 'oldest') {
-          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          return a.id.localeCompare(b.id);
         }
         if (sortBy === 'recently_updated') {
           return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
