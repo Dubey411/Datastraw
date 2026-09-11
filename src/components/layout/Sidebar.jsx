@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useTickets } from '../../context/TicketContext';
 import { useTheme } from '../../context/ThemeContext';
-import sidebarOrbLight from '../../assets/sidebar_orb_light.png';
+import sidebarBubblesLight from '../../assets/sidebar_bubbles_light.jpg';
 import sidebarPlanetDark from '../../assets/sidebar_planet_dark.jpg';
 import {
   LayoutDashboard,
@@ -100,29 +100,14 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
           </>
         ) : (
           <>
-            {/* Light Mode Soft Ambient Mesh Glow */}
-            <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-indigo-50/50 via-purple-50/20 to-transparent pointer-events-none" />
-            <div className="absolute top-28 -left-6 w-24 h-24 rounded-full bg-cyan-200/30 blur-2xl pointer-events-none" />
-            <div className="absolute bottom-48 -right-6 w-28 h-28 rounded-full bg-purple-200/25 blur-2xl pointer-events-none" />
-
-            {/* Light Mode Pearlescent White Iridescent Orb Artwork with Smooth Feathered Mask (No Square Edges) */}
-            <div
-              className={cn(
-                'absolute -left-12 sm:-left-10 top-[59%] -translate-y-1/2 w-36 h-36 sm:w-40 sm:h-40 rounded-full pointer-events-none transition-all duration-500 overflow-hidden',
-                isCollapsed ? 'opacity-30 scale-75 -left-16' : 'opacity-85'
-              )}
-              style={{
-                WebkitMaskImage: 'radial-gradient(circle at 50% 50%, black 55%, transparent 95%)',
-                maskImage: 'radial-gradient(circle at 50% 50%, black 55%, transparent 95%)',
-              }}
-            >
-              <img
-                src={sidebarOrbLight || '/sidebar_orb_light.png'}
-                alt="Sidebar Light Orb"
-                className="w-full h-full object-cover rounded-full mix-blend-multiply select-none"
-              />
-              <div className="absolute inset-0 rounded-full pointer-events-none shadow-[0_0_30px_rgba(147,51,234,0.1)]" />
-            </div>
+            {/* Full-Height Stream of Colorful Iridescent Bubbles across entire sidebar */}
+            <img
+              src={sidebarBubblesLight || '/sidebar_bubbles_light.jpg'}
+              alt="Colorful Bubbles Background"
+              className="absolute inset-0 w-full h-full object-cover object-center mix-blend-multiply opacity-75 select-none pointer-events-none"
+            />
+            {/* Soft luminous white veil so text has 100% contrast and never disappears */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/65 via-white/45 to-white/65 pointer-events-none" />
           </>
         )}
       </div>
@@ -262,7 +247,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
                     ? 'bg-indigo-600 text-white font-semibold shadow-md shadow-indigo-600/30'
                     : isDark
                     ? 'text-slate-400 hover:text-white hover:bg-slate-800/60'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/90 font-medium'
+                    : 'text-slate-800 hover:text-slate-950 hover:bg-white/90 backdrop-blur-[2px] font-semibold'
                 )}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -273,7 +258,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
                         ? 'text-white'
                         : isDark
                         ? 'text-slate-400 group-hover:text-slate-200'
-                        : 'text-slate-500 group-hover:text-slate-800'
+                        : 'text-slate-700 group-hover:text-slate-950'
                     )}
                   />
                   {!isCollapsed && <span className="truncate">{item.label}</span>}
