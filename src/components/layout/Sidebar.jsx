@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useTickets } from '../../context/TicketContext';
 import { useTheme } from '../../context/ThemeContext';
-import sidebarOrbLight from '../../assets/sidebar_orb_light.jpg';
+import sidebarOrbLight from '../../assets/sidebar_orb_light.png';
 import sidebarPlanetDark from '../../assets/sidebar_planet_dark.jpg';
 import {
   LayoutDashboard,
