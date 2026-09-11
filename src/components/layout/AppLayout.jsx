@@ -27,7 +27,12 @@ export function AppLayout() {
   const renderActiveView = () => {
     switch (activeView) {
       case 'dashboard':
-        return <DashboardView onOpenCreateModal={() => setIsCreateModalOpen(true)} />;
+        return (
+          <DashboardView
+            onOpenCreateModal={() => setIsCreateModalOpen(true)}
+            onOpenAnalytics={() => setActiveView('analytics')}
+          />
+        );
       case 'tickets':
         return (
           <div className="space-y-4 max-w-7xl mx-auto animate-fade-in-up">
