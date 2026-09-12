@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../utils/cn';
 import { Button } from './Button';
-import { Inbox, SearchX, AlertCircle } from 'lucide-react';
+import { Inbox, SearchX, AlertCircle, Sparkles } from 'lucide-react';
 
 export function EmptyState({
   type = 'empty',
@@ -9,9 +9,18 @@ export function EmptyState({
   description,
   actionLabel,
   onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
   className,
 }) {
   const configs = {
+    fresh_workspace: {
+      icon: Sparkles,
+      iconBg: 'bg-gradient-to-tr from-blue-500/20 via-indigo-500/20 to-purple-500/20 text-indigo-600 dark:text-indigo-400 border border-indigo-500/30',
+      defaultTitle: 'Welcome to your fresh workspace!',
+      defaultDescription: 'You have a clean slate. Create your first support ticket to start managing inquiries, or load sample demo data to explore the CRM tools.',
+      defaultAction: '+ Create First Ticket',
+    },
     empty: {
       icon: Inbox,
       iconBg: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/70 dark:text-indigo-400',
@@ -45,7 +54,7 @@ export function EmptyState({
         className
       )}
     >
-      <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-200 hover:scale-105', config.iconBg)}>
+      <div className={cn('w-12 h-12 rounded-2xl flex items-center justify-center mb-4 transition-transform duration-200 hover:scale-105 shadow-sm', config.iconBg)}>
         <Icon className="w-6 h-6" />
       </div>
       <h3 className="text-sm font-semibold text-slate-900 dark:text-dark-text tracking-tight">
@@ -54,8 +63,8 @@ export function EmptyState({
       <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400 max-w-sm leading-relaxed">
         {description || config.defaultDescription}
       </p>
-      {(actionLabel || config.defaultAction) && onAction && (
-        <div className="mt-5">
+      <div className="mt-5 flex items-center justify-center gap-2.5 flex-wrap">
+        {(actionLabel || config.defaultAction) && onAction && (
           <Button
             size="sm"
             variant={type === 'no_results' ? 'outline' : 'primary'}
@@ -63,8 +72,17 @@ export function EmptyState({
           >
             {actionLabel || config.defaultAction}
           </Button>
-        </div>
-      )}
+        )}
+        {secondaryActionLabel && onSecondaryAction && (
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={onSecondaryAction}
+          >
+            {secondaryActionLabel}
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
