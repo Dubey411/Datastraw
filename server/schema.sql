@@ -4,13 +4,14 @@
 CREATE TABLE IF NOT EXISTS customers (
   id VARCHAR(50) PRIMARY KEY,
   name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE,
+  email VARCHAR(255) NOT NULL,
   company VARCHAR(255),
   role VARCHAR(100),
   status VARCHAR(50) DEFAULT 'Pro',
   avatar_bg VARCHAR(100) DEFAULT 'bg-blue-600 text-white',
   owner_email VARCHAR(255) DEFAULT 'shubham.dubey@datastraw.io',
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  CONSTRAINT customers_email_owner_unique UNIQUE (email, owner_email)
 );
 
 -- 2. Agents Table
