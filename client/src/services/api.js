@@ -36,6 +36,7 @@ export const api = {
     if (params.category && params.category !== 'All') query.set('category', params.category);
     if (params.search) query.set('search', params.search);
     if (params.sortBy) query.set('sortBy', params.sortBy);
+    if (params.showTrash || params.status === 'Trash') query.set('showTrash', 'true');
 
     const qs = query.toString();
     const url = `${API_BASE}/tickets${qs ? `?${qs}` : ''}`;
@@ -105,7 +106,7 @@ export const api = {
   },
 
   /**
-   * Delete Ticket
+   * Soft Delete Ticket (Move to Trash)
    */
   async deleteTicket(id, userEmail) {
     const res = await fetch(`${API_BASE}/tickets/${encodeURIComponent(id)}`, {
@@ -119,10 +120,68 @@ export const api = {
   },
 
   /**
-   * Bulk Delete Tickets
+   * Restore Ticket from Trash
    */
-  async bulkDeleteTickets(ids, userEmail) {
-    const res = await fetch(`${API_BASE}/tickets/bulk-delete`, {
+  async restoreTicket(id, userEmail) {
+    const res = await fetch(`${API_BASE}/tickets/${encodeURIComponent(id)}/restore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userEmail ? { 'x-user-email': userEmail } : {}),
+      },
+    });
+    return handleResponse(res);
+  },
+
+  /**
+   * Permanently Purge Ticket
+   */
+  async permanentDeleteTicket(id, userEmail) {
+    const res = await fetch(`${API_BASE}/tickets/${encodeURIComponent(id)}?permanent=true`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userEmail ? { 'x-user-email': userEmail } : {}),
+      },
+    });
+    return handleResponse(res);
+  },
+
+  /**
+   * Bulk Move Tickets to Trash
+   */
+  async bulkTrashTickets(ids, userEmail) {
+    const res = await fetch(`${API_BASE}/tickets/bulk-trash`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userEmail ? { 'x-user-email': userEmail } : {}),
+      },
+      body: JSON.stringify({ ids }),
+    });
+    return handleResponse(res);
+  },
+
+  /**
+   * Bulk Restore Tickets from Trash
+   */
+  async bulkRestoreTickets(ids, userEmail) {
+    const res = await fetch(`${API_BASE}/tickets/bulk-restore`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userEmail ? { 'x-user-email': userEmail } : {}),
+      },
+      body: JSON.stringify({ ids }),
+    });
+    return handleResponse(res);
+  },
+
+  /**
+   * Bulk Permanently Purge Tickets
+   */
+  async bulkPermanentDeleteTickets(ids, userEmail) {
+    const res = await fetch(`${API_BASE}/tickets/bulk-permanent-delete`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
