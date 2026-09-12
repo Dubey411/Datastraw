@@ -5,6 +5,13 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey && supabaseAnonKey !== 'your_supabase_anon_key_here');
 
+// Normalize URL hash if redirected back with double hash (#app#access_token=...)
+if (typeof window !== 'undefined' && window.location.hash.includes('access_token=')) {
+  if (window.location.hash.startsWith('#app#')) {
+    window.location.hash = window.location.hash.replace('#app#', '#');
+  }
+}
+
 export const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
@@ -24,7 +31,8 @@ export async function signInWithGoogle() {
     return { simulated: true };
   }
 
-  const redirectUrl = `${window.location.origin}/#app`;
+  // Redirect to site root origin so Supabase attaches #access_token cleanly to root
+  const redirectUrl = `${window.location.origin}/`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
