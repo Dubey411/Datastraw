@@ -26,6 +26,59 @@ export function TicketProvider({ children }) {
     return DEFAULT_DEMO_AGENT;
   });
 
+  // Initialize tickets (demo account gets INITIAL_TICKETS, fresh accounts start empty)
+  const [tickets, setTickets] = useState(() => {
+    if (currentAgent.email !== DEFAULT_DEMO_AGENT.email) {
+      return [];
+    }
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch (_) {}
+    return INITIAL_TICKETS;
+  });
+
+  const [customers, setCustomers] = useState(
+    currentAgent.email === DEFAULT_DEMO_AGENT.email ? INITIAL_CUSTOMERS : []
+  );
+  const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isServerConnected, setIsServerConnected] = useState(false);
+
+  // Filters and search
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Open' | 'In Progress' | 'Closed'
+  const [priorityFilter, setPriorityFilter] = useState('All'); // 'All' | 'Urgent' | 'High' | 'Medium' | 'Low'
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'priority' | 'recently_updated'
+
+  // Fetch tickets & customers scoped to current account
+  const loadData = useCallback(async (email) => {
+    const targetEmail = email || currentAgent.email;
+    try {
+      const data = await api.getTickets({ userEmail: targetEmail });
+      if (data && Array.isArray(data.tickets)) {
+        setTickets(data.tickets);
+        setIsServerConnected(true);
+      }
+      const custData = await api.getCustomers(targetEmail);
+      if (custData && Array.isArray(custData)) {
+        setCustomers(custData);
+      }
+    } catch (err) {
+      console.warn('Backend API unavailable, utilizing local storage cache:', err.message);
+      setIsServerConnected(false);
+      if (targetEmail === DEFAULT_DEMO_AGENT.email) {
+        setTickets(INITIAL_TICKETS);
+        setCustomers(INITIAL_CUSTOMERS);
+      } else {
+        setTickets([]);
+        setCustomers([]);
+      }
+    }
+  }, [currentAgent.email]);
+
   // Listen to Supabase Auth State (Google OAuth login)
   useEffect(() => {
     if (!supabase) return;
@@ -105,59 +158,6 @@ export function TicketProvider({ children }) {
 
     return () => subscription.unsubscribe();
   }, [loadData]);
-
-  // Initialize tickets (demo account gets INITIAL_TICKETS, fresh accounts start empty)
-  const [tickets, setTickets] = useState(() => {
-    if (currentAgent.email !== DEFAULT_DEMO_AGENT.email) {
-      return [];
-    }
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch (_) {}
-    return INITIAL_TICKETS;
-  });
-
-  const [customers, setCustomers] = useState(
-    currentAgent.email === DEFAULT_DEMO_AGENT.email ? INITIAL_CUSTOMERS : []
-  );
-  const [selectedTicketId, setSelectedTicketId] = useState(null);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isServerConnected, setIsServerConnected] = useState(false);
-
-  // Filters and search
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Open' | 'In Progress' | 'Closed'
-  const [priorityFilter, setPriorityFilter] = useState('All'); // 'All' | 'Urgent' | 'High' | 'Medium' | 'Low'
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'priority' | 'recently_updated'
-
-  // Fetch tickets & customers scoped to current account
-  const loadData = useCallback(async (email) => {
-    const targetEmail = email || currentAgent.email;
-    try {
-      const data = await api.getTickets({ userEmail: targetEmail });
-      if (data && Array.isArray(data.tickets)) {
-        setTickets(data.tickets);
-        setIsServerConnected(true);
-      }
-      const custData = await api.getCustomers(targetEmail);
-      if (custData && Array.isArray(custData)) {
-        setCustomers(custData);
-      }
-    } catch (err) {
-      console.warn('Backend API unavailable, utilizing local storage cache:', err.message);
-      setIsServerConnected(false);
-      if (targetEmail === DEFAULT_DEMO_AGENT.email) {
-        setTickets(INITIAL_TICKETS);
-        setCustomers(INITIAL_CUSTOMERS);
-      } else {
-        setTickets([]);
-        setCustomers([]);
-      }
-    }
-  }, [currentAgent.email]);
 
   useEffect(() => {
     loadData(currentAgent.email);
