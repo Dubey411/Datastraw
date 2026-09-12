@@ -8,7 +8,16 @@ export default {
   theme: {
     extend: {
       colors: {
+        bg: '#F8FAFC',
+        surface: '#FFFFFF',
+        'surface-2': '#F1F5F9',
+        ink: '#0F172A',
+        'ink-dim': '#64748B',
         brand: {
+          DEFAULT: '#4F46E5',
+          strong: '#4338CA',
+          deep: '#1E1B4B',
+          tint: '#EEF2FF',
           50: '#EEF2FF',
           100: '#E0E7FF',
           200: '#C7D2FE',
@@ -35,12 +44,25 @@ export default {
       },
       fontFamily: {
         sans: [
-          'Inter',
+          '"Plus Jakarta Sans"',
           '-apple-system',
-          'BlinkMacSystemFont',
           '"Segoe UI"',
           'Roboto',
           'sans-serif',
+        ],
+        display: [
+          'Fraunces',
+          'Georgia',
+          'serif',
+        ],
+        mono: [
+          '"JetBrains Mono"',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
+          'Monaco',
+          'Consolas',
+          'monospace',
         ],
       },
       borderRadius: {
