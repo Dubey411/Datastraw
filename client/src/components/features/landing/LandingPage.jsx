@@ -13,15 +13,10 @@ import {
   Users,
   BarChart3,
   Shield,
-  Sparkles,
   ChevronDown,
   Sun,
   Moon,
   Zap,
-  Star,
-  ExternalLink,
-  ChevronRight,
-  HelpCircle,
 } from 'lucide-react';
 
 export function LandingPage({ onNavigate }) {
@@ -100,24 +95,29 @@ export function LandingPage({ onNavigate }) {
           </div>
 
           {/* Desktop Nav Links */}
-          <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-slate-600 dark:text-slate-300">
-            <div className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-white cursor-pointer transition-colors">
-              <span>Product</span>
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </div>
+          <nav className="hidden md:flex items-center gap-7 text-xs font-medium text-slate-600 dark:text-slate-300 font-sans">
             <a href="#features" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
               Features
             </a>
-            <a href="#pricing" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
-              Pricing
+            <a href="#how-it-works" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
+              How it works
             </a>
             <a href="#customers" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
               Customers
             </a>
-            <div className="flex items-center gap-1 hover:text-indigo-600 dark:hover:text-white cursor-pointer transition-colors">
-              <span>Resources</span>
-              <ChevronDown className="w-3 h-3 opacity-60" />
-            </div>
+            <a href="#security" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
+              Security
+            </a>
+            <a href="#pricing" className="hover:text-indigo-600 dark:hover:text-white transition-colors">
+              Pricing
+            </a>
+            <button
+              type="button"
+              onClick={() => onNavigate('login')}
+              className="hover:text-indigo-600 dark:hover:text-white transition-colors cursor-pointer"
+            >
+              Sign in
+            </button>
           </nav>
 
           {/* Right Controls: Theme Toggle, Sign In, Get Started */}
@@ -137,27 +137,13 @@ export function LandingPage({ onNavigate }) {
               {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
             </button>
 
-            {/* Sign In Button */}
-            <button
-              type="button"
-              onClick={() => onNavigate('login')}
-              className={cn(
-                'px-4 py-2 rounded-xl text-xs font-semibold border transition-all duration-200',
-                isDark
-                  ? 'border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
-                  : 'border-slate-200 text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-              )}
-            >
-              Sign in
-            </button>
-
-            {/* Get Started Primary Button */}
+            {/* Start free Primary Button */}
             <button
               type="button"
               onClick={() => onNavigate('signup')}
-              className="px-4 sm:px-5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all duration-200 active:scale-95"
+              className="px-4 sm:px-5 py-2.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 flex items-center gap-1.5 transition-all duration-200 active:scale-95 font-sans"
             >
-              <span>Get Started</span>
+              <span>Start free</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -170,34 +156,32 @@ export function LandingPage({ onNavigate }) {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Hero Left Column: Headline, Copy, CTAs */}
             <div className="lg:col-span-5 space-y-6 text-left">
-              {/* Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/60 shadow-2xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400 animate-pulse" />
-                <span>Modern Support, Happier Customers</span>
+              {/* Eyebrow: Section Label with 7px circle dot */}
+              <div>
+                <div className="type-eyebrow">
+                  SUPPORT CRM &middot; MADE IN INDIA
+                </div>
               </div>
 
-              {/* Headline */}
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.12]">
-                Turn Support <span className="text-slate-900 dark:text-white">into</span>
-                <br />
-                <span className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent">
-                  Stronger Relationships
-                </span>
+              {/* Headline: Fraunces 520, clamp(38px, 5vw, 58px), single italic solid brand color emphasis */}
+              <h1 className="type-h1">
+                Every conversation. One inbox.{' '}
+                <em>Resolved faster.</em>
               </h1>
 
-              {/* Subtitle */}
-              <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
-                Datastraw helps you manage customer support tickets, collaborate with your team, and deliver exceptional customer experiences — all in one powerful platform.
+              {/* Subtitle / Lede: Plus Jakarta Sans 18px, slate-500, max-width 56ch */}
+              <p className="type-lede">
+                Datastraw brings email, WhatsApp, live chat and calls into a single shared inbox so your support team resolves tickets with superhuman speed.
               </p>
 
               {/* CTA Buttons */}
               <div className="flex items-center gap-3.5 flex-wrap pt-2">
                 <button
                   type="button"
-                  onClick={() => onNavigate('app')}
-                  className="px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-xl shadow-indigo-600/30 flex items-center gap-2 transition-all"
+                  onClick={() => onNavigate('signup')}
+                  className="px-6 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-[0.98] text-white text-xs sm:text-sm font-semibold shadow-xl shadow-indigo-600/30 flex items-center gap-2 transition-all font-sans"
                 >
-                  <span>Get Started Free</span>
+                  <span>Start Free</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -205,7 +189,7 @@ export function LandingPage({ onNavigate }) {
                   type="button"
                   onClick={() => setIsDemoModalOpen(true)}
                   className={cn(
-                    'px-5 py-3 rounded-xl text-xs sm:text-sm font-semibold border flex items-center gap-2 transition-all',
+                    'px-5 py-3.5 rounded-xl text-xs sm:text-sm font-semibold border flex items-center gap-2 transition-all font-sans',
                     isDark
                       ? 'bg-slate-900/80 border-slate-800 text-slate-200 hover:bg-slate-800'
                       : 'bg-white border-slate-200/80 text-slate-800 hover:bg-slate-50 shadow-xs'
@@ -217,7 +201,7 @@ export function LandingPage({ onNavigate }) {
               </div>
 
               {/* Trust Checkmarks */}
-              <div className="pt-2 flex items-center gap-4 sm:gap-6 flex-wrap text-xs text-slate-500 dark:text-slate-400 font-medium">
+              <div className="pt-2 flex items-center gap-4 sm:gap-6 flex-wrap text-xs text-slate-500 dark:text-slate-400 font-medium font-sans">
                 <div className="flex items-center gap-1.5">
                   <Check className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                   <span>No credit card required</span>
@@ -353,7 +337,19 @@ export function LandingPage({ onNavigate }) {
       </section>
 
       {/* 4. 4 Feature Cards Row */}
-      <section id="features" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+        <div className="text-left max-w-2xl space-y-3">
+          <div className="type-eyebrow">
+            POWERFUL CAPABILITIES
+          </div>
+          <h2 className="type-h2">
+            Everything you need to deliver <em>exceptional support.</em>
+          </h2>
+          <p className="type-lede">
+            Engineered for high-velocity teams who refuse to compromise on customer experience.
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Card 1: Ticket Management */}
           <div
@@ -367,8 +363,8 @@ export function LandingPage({ onNavigate }) {
             <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center">
               <Inbox className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold tracking-tight">Effortless Ticket Management</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <h3 className="type-h3">Effortless Ticket Management</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
               Create, track, and resolve tickets with complete visibility across all channels.
             </p>
           </div>
@@ -385,8 +381,8 @@ export function LandingPage({ onNavigate }) {
             <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
               <Users className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold tracking-tight">Collaborate Seamlessly</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <h3 className="type-h3">Collaborate Seamlessly</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
               Work together with your team and never miss a critical customer message.
             </p>
           </div>
@@ -403,8 +399,8 @@ export function LandingPage({ onNavigate }) {
             <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/80 text-purple-600 dark:text-purple-400 flex items-center justify-center">
               <BarChart3 className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold tracking-tight">Insights that Matter</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <h3 className="type-h3">Insights that Matter</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
               Turn support data into actionable insights, SLA tracking, and better decisions.
             </p>
           </div>
@@ -421,8 +417,8 @@ export function LandingPage({ onNavigate }) {
             <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
               <Shield className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold tracking-tight">Happier Customers</h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            <h3 className="type-h3">Happier Customers</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed font-sans">
               Deliver faster, more personalized support that builds lasting loyalty.
             </p>
           </div>
@@ -440,19 +436,16 @@ export function LandingPage({ onNavigate }) {
 
             {/* Right: Copy & 4 Big Metrics */}
             <div className="lg:col-span-7 space-y-8">
-              <div className="space-y-3">
-                <span className="text-xs font-bold uppercase tracking-widest text-indigo-600 dark:text-indigo-400">
+              <div className="space-y-4">
+                <div className="type-eyebrow">
                   MORE THAN A TOOL
-                </span>
+                </div>
 
-                <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-                  Built for teams that{' '}
-                  <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                    care
-                  </span>
+                <h2 className="type-h2">
+                  Built for teams that <em>care.</em>
                 </h2>
 
-                <p className="text-sm sm:text-base text-slate-500 dark:text-slate-400 leading-relaxed max-w-xl">
+                <p className="type-lede">
                   Whether you're a startup or an enterprise, Datastraw gives you the tools to provide world-class support, strengthen customer relationships, and grow faster.
                 </p>
               </div>
@@ -460,37 +453,37 @@ export function LandingPage({ onNavigate }) {
               {/* 4 Metric Columns */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <div className="font-display font-semibold text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">
                     10K+
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium font-sans">
                     Tickets resolved
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <div className="font-display font-semibold text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">
                     98.4%
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium font-sans">
                     Customer satisfaction
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <div className="font-display font-semibold text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">
                     2x
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium font-sans">
                     Faster response time
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                  <div className="font-display font-semibold text-3xl sm:text-4xl text-slate-900 dark:text-white tracking-tight">
                     100%
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium">
+                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-medium font-sans">
                     Focus on your customers
                   </div>
                 </div>
@@ -504,10 +497,13 @@ export function LandingPage({ onNavigate }) {
       <section id="pricing" className="py-20 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto space-y-3 mb-14">
-            <h2 className="text-3xl font-extrabold tracking-tight">
-              Simple, transparent pricing
+            <div className="type-eyebrow justify-center">
+              TRANSPARENT PRICING
+            </div>
+            <h2 className="type-h2">
+              Simple, transparent <em>pricing.</em>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            <p className="type-lede mx-auto">
               Start with our free plan and scale as your support operations grow.
             </p>
           </div>
@@ -522,11 +518,11 @@ export function LandingPage({ onNavigate }) {
             >
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base font-bold">Starter</h3>
-                  <p className="text-xs text-slate-400 mt-1">Perfect for early teams</p>
+                  <h3 className="type-h3">Starter</h3>
+                  <p className="text-xs text-slate-400 mt-1 font-sans">Perfect for early teams</p>
                 </div>
-                <div className="text-3xl font-extrabold">$0</div>
-                <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+                <div className="text-3xl font-display font-bold">$0</div>
+                <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300 font-sans">
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-500" /> Up to 3 team members
                   </li>
@@ -542,7 +538,7 @@ export function LandingPage({ onNavigate }) {
               <button
                 type="button"
                 onClick={() => onNavigate('app')}
-                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-sans"
               >
                 Get Started Free
               </button>
@@ -555,20 +551,20 @@ export function LandingPage({ onNavigate }) {
                 isDark ? 'bg-[#10172D]' : 'bg-white'
               )}
             >
-              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-bold uppercase tracking-wider">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-indigo-600 text-white text-[10px] font-mono uppercase tracking-wider font-bold">
                 Most Popular
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base font-bold">Pro</h3>
-                  <p className="text-xs text-slate-400 mt-1">For growing customer success teams</p>
+                  <h3 className="type-h3">Pro</h3>
+                  <p className="text-xs text-slate-400 mt-1 font-sans">For growing customer success teams</p>
                 </div>
                 <div className="flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold">$29</span>
-                  <span className="text-xs text-slate-400">/ agent / mo</span>
+                  <span className="text-3xl font-display font-bold">$29</span>
+                  <span className="text-xs text-slate-400 font-sans">/ agent / mo</span>
                 </div>
-                <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+                <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300 font-sans">
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-indigo-500" /> Unlimited tickets & queues
                   </li>
@@ -587,7 +583,7 @@ export function LandingPage({ onNavigate }) {
               <button
                 type="button"
                 onClick={() => onNavigate('signup')}
-                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all"
+                className="w-full py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition-all font-sans"
               >
                 Start 14-Day Free Trial
               </button>
@@ -602,11 +598,11 @@ export function LandingPage({ onNavigate }) {
             >
               <div className="space-y-4">
                 <div>
-                  <h3 className="text-base font-bold">Enterprise</h3>
-                  <p className="text-xs text-slate-400 mt-1">Tailored for large organizations</p>
+                  <h3 className="type-h3">Enterprise</h3>
+                  <p className="text-xs text-slate-400 mt-1 font-sans">Tailored for large organizations</p>
                 </div>
-                <div className="text-3xl font-extrabold">Custom</div>
-                <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300">
+                <div className="text-3xl font-display font-bold">Custom</div>
+                <ul className="space-y-2.5 text-xs text-slate-600 dark:text-slate-300 font-sans">
                   <li className="flex items-center gap-2">
                     <Check className="w-3.5 h-3.5 text-emerald-500" /> Dedicated SLA guarantee
                   </li>
@@ -622,7 +618,7 @@ export function LandingPage({ onNavigate }) {
               <button
                 type="button"
                 onClick={() => onNavigate('app')}
-                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all font-sans"
               >
                 Contact Sales
               </button>
@@ -634,11 +630,14 @@ export function LandingPage({ onNavigate }) {
       {/* 7. FAQ Accordion Section */}
       <section className="py-20 border-t border-slate-100 dark:border-slate-800/80">
         <div className="max-w-3xl mx-auto px-4 sm:px-6">
-          <div className="text-center space-y-2 mb-12">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Frequently Asked Questions
+          <div className="text-center space-y-3 mb-12">
+            <div className="type-eyebrow justify-center">
+              FREQUENTLY ASKED QUESTIONS
+            </div>
+            <h2 className="type-h2">
+              Everything you need to <em>know.</em>
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            <p className="type-lede mx-auto">
               Everything you need to know about Datastraw Support CRM
             </p>
           </div>
@@ -683,10 +682,10 @@ export function LandingPage({ onNavigate }) {
       <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-indigo-900 via-indigo-700 to-purple-800 p-8 sm:p-12 text-center text-white shadow-2xl space-y-5">
           <div className="max-w-2xl mx-auto space-y-3">
-            <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Ready to elevate your customer support?
+            <h2 className="type-h2 text-white">
+              Ready to elevate your <em>customer support?</em>
             </h2>
-            <p className="text-xs sm:text-sm text-indigo-100">
+            <p className="type-lede text-indigo-100 mx-auto">
               Join leading tech companies worldwide. Free forever for starter teams.
             </p>
           </div>
@@ -695,16 +694,16 @@ export function LandingPage({ onNavigate }) {
             <button
               type="button"
               onClick={() => onNavigate('app')}
-              className="px-6 py-3 rounded-xl bg-white text-indigo-700 text-xs sm:text-sm font-bold shadow-lg hover:bg-slate-50 active:scale-95 transition-all"
+              className="px-6 py-3 rounded-xl bg-white text-indigo-700 text-xs sm:text-sm font-bold shadow-lg hover:bg-slate-50 active:scale-95 transition-all font-sans"
             >
               Open Live Dashboard
             </button>
             <button
               type="button"
               onClick={() => onNavigate('signup')}
-              className="px-6 py-3 rounded-xl bg-indigo-950/40 border border-white/20 text-white text-xs sm:text-sm font-semibold hover:bg-indigo-950/60 transition-all"
+              className="px-6 py-3 rounded-xl bg-indigo-950/40 border border-white/20 text-white text-xs sm:text-sm font-semibold hover:bg-indigo-950/60 transition-all font-sans"
             >
-              Sign Up Now →
+              Start free &rarr;
             </button>
           </div>
         </div>

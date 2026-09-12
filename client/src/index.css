@@ -92,76 +92,82 @@
 @layer components {
   /* Eyebrow: JetBrains Mono 11.5px uppercase, tracking 0.16em, preceded by 7px filled circle */
   .type-eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11.5px;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--brand);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    line-height: 1;
+    font-family: var(--font-mono) !important;
+    font-size: 11.5px !important;
+    font-weight: 500 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.16em !important;
+    color: var(--brand) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    line-height: 1 !important;
   }
   .type-eyebrow::before {
-    content: '';
-    display: inline-block;
-    width: 7px;
-    height: 7px;
-    border-radius: 9999px;
-    background-color: var(--brand);
-    flex-shrink: 0;
+    content: '' !important;
+    display: inline-block !important;
+    width: 7px !important;
+    height: 7px !important;
+    border-radius: 9999px !important;
+    background-color: var(--brand) !important;
+    flex-shrink: 0 !important;
   }
 
   /* Headings: Fraunces serif with variable weight & optical sizing */
   .type-h1 {
-    font-family: var(--font-display);
-    font-weight: 520;
-    font-size: clamp(38px, 5vw, 58px);
-    line-height: 1.06;
-    letter-spacing: -0.015em;
+    font-family: var(--font-display) !important;
+    font-weight: 520 !important;
+    font-size: clamp(38px, 5vw, 58px) !important;
+    line-height: 1.06 !important;
+    letter-spacing: -0.015em !important;
     color: var(--ink);
     font-optical-sizing: auto;
   }
   .type-h1 em,
   .type-h1 i,
   .type-h1 .type-emphasis {
-    font-style: italic;
-    color: var(--brand);
+    font-style: italic !important;
+    font-weight: 520 !important;
+    color: var(--brand) !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
   }
 
   .type-h2 {
-    font-family: var(--font-display);
-    font-weight: 540;
-    font-size: clamp(29px, 3.4vw, 40px);
-    line-height: 1.14;
-    letter-spacing: -0.01em;
+    font-family: var(--font-display) !important;
+    font-weight: 540 !important;
+    font-size: clamp(29px, 3.4vw, 40px) !important;
+    line-height: 1.14 !important;
+    letter-spacing: -0.01em !important;
     color: var(--ink);
     font-optical-sizing: auto;
   }
   .type-h2 em,
   .type-h2 i,
   .type-h2 .type-emphasis {
-    font-style: italic;
-    color: var(--brand);
+    font-style: italic !important;
+    font-weight: 540 !important;
+    color: var(--brand) !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
   }
 
   /* Section Heading h3: Plus Jakarta Sans 700, 18px */
   .type-h3 {
-    font-family: var(--font-sans);
-    font-weight: 700;
-    font-size: 18px;
-    line-height: 1.4;
+    font-family: var(--font-sans) !important;
+    font-weight: 700 !important;
+    font-size: 18px !important;
+    line-height: 1.4 !important;
     color: var(--ink);
   }
 
   /* Body lede: Plus Jakarta Sans 18px, slate-500, max-width 56ch */
   .type-lede {
-    font-family: var(--font-sans);
-    font-size: 18px;
-    line-height: 1.65;
-    color: var(--ink-dim);
-    max-width: 56ch;
+    font-family: var(--font-sans) !important;
+    font-size: 18px !important;
+    line-height: 1.65 !important;
+    color: var(--ink-dim) !important;
+    max-width: 56ch !important;
   }
 
   /* Body regular: Plus Jakarta Sans 16.5px, line-height 1.65 */
