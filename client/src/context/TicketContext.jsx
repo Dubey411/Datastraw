@@ -41,6 +41,7 @@ export function TicketProvider({ children }) {
   const [customers, setCustomers] = useState(
     currentAgent.email === DEFAULT_DEMO_AGENT.email ? INITIAL_CUSTOMERS : []
   );
+  const [trashTickets, setTrashTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -48,7 +49,7 @@ export function TicketProvider({ children }) {
 
   // Filters and search
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Open' | 'In Progress' | 'Closed'
+  const [statusFilter, setStatusFilter] = useState('All'); // 'All' | 'Open' | 'In Progress' | 'Closed' | 'Trash'
   const [priorityFilter, setPriorityFilter] = useState('All'); // 'All' | 'Urgent' | 'High' | 'Medium' | 'Low'
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'priority' | 'recently_updated'
@@ -57,12 +58,19 @@ export function TicketProvider({ children }) {
   const loadData = useCallback(async (email) => {
     const targetEmail = email || currentAgent.email;
     try {
-      const data = await api.getTickets({ userEmail: targetEmail });
-      if (data && Array.isArray(data.tickets)) {
-        setTickets(data.tickets);
+      const [activeData, trashData, custData] = await Promise.all([
+        api.getTickets({ userEmail: targetEmail }),
+        api.getTickets({ userEmail: targetEmail, showTrash: true }),
+        api.getCustomers(targetEmail).catch(() => []),
+      ]);
+
+      if (activeData && Array.isArray(activeData.tickets)) {
+        setTickets(activeData.tickets);
         setIsServerConnected(true);
       }
-      const custData = await api.getCustomers(targetEmail);
+      if (trashData && Array.isArray(trashData.tickets)) {
+        setTrashTickets(trashData.tickets);
+      }
       if (custData && Array.isArray(custData)) {
         setCustomers(custData);
       }
@@ -71,9 +79,11 @@ export function TicketProvider({ children }) {
       setIsServerConnected(false);
       if (targetEmail === DEFAULT_DEMO_AGENT.email) {
         setTickets(INITIAL_TICKETS);
+        setTrashTickets([]);
         setCustomers(INITIAL_CUSTOMERS);
       } else {
         setTickets([]);
+        setTrashTickets([]);
         setCustomers([]);
       }
     }
@@ -181,8 +191,8 @@ export function TicketProvider({ children }) {
 
   // Selected ticket memo
   const selectedTicket = useMemo(() => {
-    return tickets.find((t) => t.id === selectedTicketId) || null;
-  }, [tickets, selectedTicketId]);
+    return tickets.find((t) => t.id === selectedTicketId) || trashTickets.find((t) => t.id === selectedTicketId) || null;
+  }, [tickets, trashTickets, selectedTicketId]);
 
   // Stats calculation
   const stats = useMemo(() => {
@@ -190,17 +200,19 @@ export function TicketProvider({ children }) {
     const open = tickets.filter((t) => t.status === 'Open').length;
     const inProgress = tickets.filter((t) => t.status === 'In Progress').length;
     const closed = tickets.filter((t) => t.status === 'Closed').length;
+    const trash = trashTickets.length;
 
     return {
       total,
       open,
       inProgress,
       closed,
+      trash,
       openTrend: total > 0 ? '+8% this week' : '0 tickets active',
       inProgressTrend: total > 0 ? 'Avg response 18m' : 'Ready for triage',
       closedTrend: total > 0 ? '98.4% resolution rate' : 'No resolved tickets yet',
     };
-  }, [tickets]);
+  }, [tickets, trashTickets]);
 
   // Tab counts
   const tabCounts = useMemo(() => {
@@ -209,14 +221,19 @@ export function TicketProvider({ children }) {
       Open: tickets.filter((t) => t.status === 'Open').length,
       'In Progress': tickets.filter((t) => t.status === 'In Progress').length,
       Closed: tickets.filter((t) => t.status === 'Closed').length,
+      Trash: trashTickets.length,
     };
-  }, [tickets]);
+  }, [tickets, trashTickets]);
 
   // Filtered & Sorted Tickets
   const filteredTickets = useMemo(() => {
-    return tickets
+    const sourceList = statusFilter === 'Trash' ? trashTickets : tickets;
+
+    return sourceList
       .filter((ticket) => {
-        if (statusFilter !== 'All' && ticket.status !== statusFilter) return false;
+        if (statusFilter !== 'All' && statusFilter !== 'Trash' && ticket.status !== statusFilter) {
+          return false;
+        }
         if (priorityFilter !== 'All' && ticket.priority !== priorityFilter) return false;
         if (categoryFilter !== 'All' && ticket.category !== categoryFilter) return false;
         if (searchQuery.trim() !== '') {
@@ -242,7 +259,7 @@ export function TicketProvider({ children }) {
         }
         return 0;
       });
-  }, [tickets, statusFilter, priorityFilter, categoryFilter, searchQuery, sortBy]);
+  }, [tickets, trashTickets, statusFilter, priorityFilter, categoryFilter, searchQuery, sortBy]);
 
   const openTicketDetail = (ticketId) => setSelectedTicketId(ticketId);
   const closeTicketDetail = () => setSelectedTicketId(null);
@@ -453,39 +470,199 @@ export function TicketProvider({ children }) {
     }
   };
 
-  // Delete a single ticket
-  const deleteTicket = async (ticketId) => {
+  // Soft Delete a single ticket (Move to Trash)
+  const softDeleteTicket = async (ticketId) => {
     if (!ticketId) return;
+    const now = new Date().toISOString();
+    const targetTicket = tickets.find((t) => t.id === ticketId);
+
+    // Optimistic UI update
+    setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+    if (targetTicket) {
+      const trashed = {
+        ...targetTicket,
+        deletedAt: now,
+        isDeleted: true,
+        updatedAt: now,
+        timeline: [
+          ...(targetTicket.timeline || []),
+          {
+            id: `audit-${Date.now()}`,
+            type: 'system_event',
+            author: currentAgent,
+            timestamp: now,
+            content: 'Ticket moved to Trash',
+          },
+        ],
+      };
+      setTrashTickets((prev) => [trashed, ...prev]);
+    }
+
+    if (selectedTicketId === ticketId) {
+      setSelectedTicketId(null);
+    }
+    toast.info('Moved to Trash', `Ticket ${ticketId} moved to Trash. Recoverable anytime.`);
 
     try {
       await api.deleteTicket(ticketId, currentAgent.email);
     } catch (err) {
-      console.warn('Backend API delete failed, deleting locally:', err);
+      console.warn('Backend soft delete failed:', err);
+    }
+  };
+
+  // Restore a ticket from Trash
+  const restoreTicket = async (ticketId) => {
+    if (!ticketId) return;
+    const now = new Date().toISOString();
+    const targetTicket = trashTickets.find((t) => t.id === ticketId);
+
+    // Optimistic UI update
+    setTrashTickets((prev) => prev.filter((t) => t.id !== ticketId));
+    if (targetTicket) {
+      const restored = {
+        ...targetTicket,
+        deletedAt: null,
+        isDeleted: false,
+        updatedAt: now,
+        timeline: [
+          ...(targetTicket.timeline || []),
+          {
+            id: `audit-${Date.now()}`,
+            type: 'system_event',
+            author: currentAgent,
+            timestamp: now,
+            content: 'Ticket restored from Trash',
+          },
+        ],
+      };
+      setTickets((prev) => [restored, ...prev]);
     }
 
+    toast.success('Ticket Restored', `Ticket ${ticketId} has been restored to active queue.`);
+
+    try {
+      await api.restoreTicket(ticketId, currentAgent.email);
+    } catch (err) {
+      console.warn('Backend restore failed:', err);
+    }
+  };
+
+  // Permanently Purge a ticket
+  const permanentDeleteTicket = async (ticketId) => {
+    if (!ticketId) return;
+
+    setTrashTickets((prev) => prev.filter((t) => t.id !== ticketId));
     setTickets((prev) => prev.filter((t) => t.id !== ticketId));
     if (selectedTicketId === ticketId) {
       setSelectedTicketId(null);
     }
-    toast.success('Ticket Deleted', `Ticket ${ticketId} has been permanently deleted.`);
-  };
 
-  // Bulk delete tickets
-  const deleteMultipleTickets = async (ticketIds) => {
-    if (!Array.isArray(ticketIds) || ticketIds.length === 0) return;
+    toast.success('Permanently Purged', `Ticket ${ticketId} was permanently deleted.`);
 
     try {
-      await api.bulkDeleteTickets(ticketIds, currentAgent.email);
+      await api.permanentDeleteTicket(ticketId, currentAgent.email);
     } catch (err) {
-      console.warn('Backend API bulk delete failed, deleting locally:', err);
+      console.warn('Backend permanent delete failed:', err);
     }
+  };
 
+  // Bulk Move tickets to Trash
+  const bulkTrashTickets = async (ticketIds) => {
+    if (!Array.isArray(ticketIds) || ticketIds.length === 0) return;
+    const now = new Date().toISOString();
     const idSet = new Set(ticketIds);
+
+    const toTrash = tickets
+      .filter((t) => idSet.has(t.id))
+      .map((t) => ({
+        ...t,
+        deletedAt: now,
+        isDeleted: true,
+        updatedAt: now,
+        timeline: [
+          ...(t.timeline || []),
+          {
+            id: `audit-${Date.now()}-${t.id}`,
+            type: 'system_event',
+            author: currentAgent,
+            timestamp: now,
+            content: 'Ticket moved to Trash',
+          },
+        ],
+      }));
+
     setTickets((prev) => prev.filter((t) => !idSet.has(t.id)));
+    setTrashTickets((prev) => [...toTrash, ...prev]);
+
     if (idSet.has(selectedTicketId)) {
       setSelectedTicketId(null);
     }
-    toast.success('Tickets Deleted', `${ticketIds.length} tickets have been permanently deleted.`);
+
+    toast.info('Moved to Trash', `${ticketIds.length} tickets moved to Trash.`);
+
+    try {
+      await api.bulkTrashTickets(ticketIds, currentAgent.email);
+    } catch (err) {
+      console.warn('Backend bulk trash failed:', err);
+    }
+  };
+
+  // Bulk Restore tickets from Trash
+  const bulkRestoreTickets = async (ticketIds) => {
+    if (!Array.isArray(ticketIds) || ticketIds.length === 0) return;
+    const now = new Date().toISOString();
+    const idSet = new Set(ticketIds);
+
+    const toRestore = trashTickets
+      .filter((t) => idSet.has(t.id))
+      .map((t) => ({
+        ...t,
+        deletedAt: null,
+        isDeleted: false,
+        updatedAt: now,
+        timeline: [
+          ...(t.timeline || []),
+          {
+            id: `audit-${Date.now()}-${t.id}`,
+            type: 'system_event',
+            author: currentAgent,
+            timestamp: now,
+            content: 'Ticket restored from Trash',
+          },
+        ],
+      }));
+
+    setTrashTickets((prev) => prev.filter((t) => !idSet.has(t.id)));
+    setTickets((prev) => [...toRestore, ...prev]);
+
+    toast.success('Tickets Restored', `${ticketIds.length} tickets restored to active queue.`);
+
+    try {
+      await api.bulkRestoreTickets(ticketIds, currentAgent.email);
+    } catch (err) {
+      console.warn('Backend bulk restore failed:', err);
+    }
+  };
+
+  // Bulk Permanently Purge tickets
+  const bulkPermanentDeleteTickets = async (ticketIds) => {
+    if (!Array.isArray(ticketIds) || ticketIds.length === 0) return;
+    const idSet = new Set(ticketIds);
+
+    setTrashTickets((prev) => prev.filter((t) => !idSet.has(t.id)));
+    setTickets((prev) => prev.filter((t) => !idSet.has(t.id)));
+
+    if (idSet.has(selectedTicketId)) {
+      setSelectedTicketId(null);
+    }
+
+    toast.success('Permanently Purged', `${ticketIds.length} tickets permanently deleted.`);
+
+    try {
+      await api.bulkPermanentDeleteTickets(ticketIds, currentAgent.email);
+    } catch (err) {
+      console.warn('Backend bulk permanent delete failed:', err);
+    }
   };
 
   // Clone sample demo data into fresh account
@@ -515,6 +692,7 @@ export function TicketProvider({ children }) {
         toast.info('Data Reset', 'Restored original demo tickets in Supabase PostgreSQL.');
       } catch (err) {
         setTickets(INITIAL_TICKETS);
+        setTrashTickets([]);
         setCustomers(INITIAL_CUSTOMERS);
         localStorage.removeItem(STORAGE_KEY);
         resetFilters();
@@ -523,6 +701,7 @@ export function TicketProvider({ children }) {
       }
     } else {
       setTickets([]);
+      setTrashTickets([]);
       setSelectedTicketId(null);
       resetFilters();
       toast.info('Workspace Cleared', 'Your tickets have been reset.');
@@ -544,6 +723,7 @@ export function TicketProvider({ children }) {
     <TicketContext.Provider
       value={{
         tickets,
+        trashTickets,
         filteredTickets,
         customers,
         selectedTicketId,
@@ -575,8 +755,14 @@ export function TicketProvider({ children }) {
         updateTicketStatus,
         updateTicketPriority,
         addTimelineEntry,
-        deleteTicket,
-        deleteMultipleTickets,
+        softDeleteTicket,
+        deleteTicket: softDeleteTicket, // default safe soft delete
+        restoreTicket,
+        permanentDeleteTicket,
+        bulkTrashTickets,
+        deleteMultipleTickets: bulkTrashTickets, // default safe bulk soft delete
+        bulkRestoreTickets,
+        bulkPermanentDeleteTickets,
         restoreSampleData,
         loadDemoDataForCurrentUser,
         logoutUser,
