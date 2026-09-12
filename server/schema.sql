@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   customer_id VARCHAR(50) REFERENCES customers(id) ON DELETE SET NULL,
   assignee_id VARCHAR(50) REFERENCES agents(id) ON DELETE SET NULL,
   owner_email VARCHAR(255) DEFAULT 'shubham.dubey@datastraw.io',
+  deleted_at TIMESTAMPTZ DEFAULT NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -56,6 +57,7 @@ CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_tickets_priority ON tickets(priority);
 CREATE INDEX IF NOT EXISTS idx_tickets_category ON tickets(category);
 CREATE INDEX IF NOT EXISTS idx_tickets_owner ON tickets(owner_email);
+CREATE INDEX IF NOT EXISTS idx_tickets_deleted_at ON tickets(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_timeline_ticket_id ON timeline_entries(ticket_id);
 CREATE INDEX IF NOT EXISTS idx_customers_owner ON customers(owner_email);
