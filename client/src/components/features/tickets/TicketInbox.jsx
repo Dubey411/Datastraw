@@ -41,7 +41,9 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
     isLoading,
     isFreshWorkspace,
     loadDemoDataForCurrentUser,
-    deleteMultipleTickets,
+    bulkTrashTickets,
+    bulkRestoreTickets,
+    bulkPermanentDeleteTickets,
   } = useTickets();
 
   const [activeViewMode, setActiveViewMode] = useState('list'); // 'list' | 'kanban' | 'analytics'
@@ -72,11 +74,23 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
   const isAllSelected =
     filteredTickets.length > 0 && selectedTicketIds.size === filteredTickets.length;
 
-  const handleBulkDelete = async () => {
+  const handleBulkMoveToTrash = async () => {
+    if (selectedTicketIds.size === 0) return;
+    await bulkTrashTickets(Array.from(selectedTicketIds));
+    setSelectedTicketIds(new Set());
+  };
+
+  const handleBulkRestore = async () => {
+    if (selectedTicketIds.size === 0) return;
+    await bulkRestoreTickets(Array.from(selectedTicketIds));
+    setSelectedTicketIds(new Set());
+  };
+
+  const handleBulkPermanentDelete = async () => {
     if (selectedTicketIds.size === 0) return;
     const count = selectedTicketIds.size;
     if (window.confirm(`Are you sure you want to permanently delete ${count} selected ticket${count > 1 ? 's' : ''}? This cannot be undone.`)) {
-      await deleteMultipleTickets(Array.from(selectedTicketIds));
+      await bulkPermanentDeleteTickets(Array.from(selectedTicketIds));
       setSelectedTicketIds(new Set());
     }
   };
@@ -86,6 +100,7 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
     { id: 'Open', label: 'Open', count: tabCounts.Open, icon: Clock },
     { id: 'In Progress', label: 'In Progress', count: tabCounts['In Progress'] },
     { id: 'Closed', label: 'Closed', count: tabCounts.Closed },
+    { id: 'Trash', label: 'Trash', count: tabCounts.Trash || 0, icon: Trash2 },
   ];
 
   const priorityOptions = [
@@ -284,6 +299,25 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
         </div>
       </div>
 
+      {/* Informative banner when viewing Trash */}
+      {statusFilter === 'Trash' && (
+        <div className="px-5 py-2.5 bg-rose-50/70 dark:bg-rose-950/40 border-b border-rose-200/80 dark:border-rose-900/50 flex items-center justify-between text-xs text-rose-800 dark:text-rose-300 animate-in fade-in duration-150">
+          <div className="flex items-center gap-2">
+            <Trash2 className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+            <span className="font-medium">
+              You are viewing <strong>Trash</strong>. Tickets here are soft-deleted and hidden from active views.
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('All')}
+            className="text-xs font-semibold text-rose-700 dark:text-rose-300 hover:underline"
+          >
+            Back to Active Tickets →
+          </button>
+        </div>
+      )}
+
       {/* 4. Table View / Kanban View */}
       {activeViewMode === 'list' ? (
         <div className="overflow-x-auto min-h-[360px]">
@@ -334,7 +368,15 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
               ) : (
                 <tr>
                   <td colSpan={9}>
-                    {isFreshWorkspace && !isFiltered ? (
+                    {statusFilter === 'Trash' ? (
+                      <EmptyState
+                        type="trash_empty"
+                        title="Trash is empty"
+                        description="No soft-deleted tickets found. Any tickets you move to trash will appear here and can be restored anytime."
+                        actionLabel="← View All Tickets"
+                        onAction={() => setStatusFilter('All')}
+                      />
+                    ) : isFreshWorkspace && !isFiltered ? (
                       <EmptyState
                         type="fresh_workspace"
                         title="Welcome to your fresh workspace!"
@@ -443,18 +485,39 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
           <strong className="text-slate-700 dark:text-slate-200 font-semibold">{tabCounts[statusFilter] ?? tabCounts.All}</strong> tickets
         </span>
         {selectedTicketIds.size > 0 && (
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
               {selectedTicketIds.size} selected
             </span>
-            <button
-              type="button"
-              onClick={handleBulkDelete}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors shadow-2xs"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete Selected</span>
-            </button>
+            {statusFilter === 'Trash' ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleBulkRestore}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Restore Selected</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleBulkPermanentDelete}
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors shadow-2xs"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Permanently Purge</span>
+                </button>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={handleBulkMoveToTrash}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors shadow-2xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Move to Trash</span>
+              </button>
+            )}
           </div>
         )}
       </div>
