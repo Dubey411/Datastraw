@@ -105,6 +105,35 @@ export const api = {
   },
 
   /**
+   * Delete Ticket
+   */
+  async deleteTicket(id, userEmail) {
+    const res = await fetch(`${API_BASE}/tickets/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userEmail ? { 'x-user-email': userEmail } : {}),
+      },
+    });
+    return handleResponse(res);
+  },
+
+  /**
+   * Bulk Delete Tickets
+   */
+  async bulkDeleteTickets(ids, userEmail) {
+    const res = await fetch(`${API_BASE}/tickets/bulk-delete`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userEmail ? { 'x-user-email': userEmail } : {}),
+      },
+      body: JSON.stringify({ ids }),
+    });
+    return handleResponse(res);
+  },
+
+  /**
    * Fetch Customers (scoped to user account)
    */
   async getCustomers(userEmail) {
