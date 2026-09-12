@@ -110,7 +110,7 @@ export function TicketProvider({ children }) {
                 setCurrentAgent(userObj);
                 localStorage.setItem('datastraw_crm_user', JSON.stringify(userObj));
                 loadData(u.email);
-                window.history.replaceState(null, '', window.location.pathname + '#app');
+                window.location.hash = 'app';
               }
             });
         }
@@ -150,8 +150,13 @@ export function TicketProvider({ children }) {
         setCurrentAgent(userObj);
         localStorage.setItem('datastraw_crm_user', JSON.stringify(userObj));
         loadData(u.email);
-        if (window.location.hash.includes('access_token=')) {
-          window.history.replaceState(null, '', window.location.pathname + '#app');
+        if (
+          window.location.hash.includes('access_token=') ||
+          window.location.search.includes('code=') ||
+          sessionStorage.getItem('datastraw_auth_intent') === 'app'
+        ) {
+          sessionStorage.removeItem('datastraw_auth_intent');
+          window.location.hash = 'app';
         }
       }
     });
