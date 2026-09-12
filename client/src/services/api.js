@@ -1,4 +1,4 @@
-// Datastraw API Service
+// Datastraw API Service with Multi-Tenant Account Isolation
 const API_BASE = '/api';
 
 /**
@@ -26,10 +26,11 @@ export const api = {
   },
 
   /**
-   * Get Tickets with optional filters
+   * Get Tickets with user scoping and optional filters
    */
   async getTickets(params = {}) {
     const query = new URLSearchParams();
+    if (params.userEmail) query.set('userEmail', params.userEmail);
     if (params.status && params.status !== 'All') query.set('status', params.status);
     if (params.priority && params.priority !== 'All') query.set('priority', params.priority);
     if (params.category && params.category !== 'All') query.set('category', params.category);
@@ -38,7 +39,9 @@ export const api = {
 
     const qs = query.toString();
     const url = `${API_BASE}/tickets${qs ? `?${qs}` : ''}`;
-    const res = await fetch(url);
+    const res = await fetch(url, {
+      headers: params.userEmail ? { 'x-user-email': params.userEmail } : {},
+    });
     return handleResponse(res);
   },
 
@@ -51,12 +54,15 @@ export const api = {
   },
 
   /**
-   * Create New Ticket
+   * Create New Ticket (scoped to user account)
    */
   async createTicket(ticketData) {
     const res = await fetch(`${API_BASE}/tickets`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(ticketData.ownerEmail ? { 'x-user-email': ticketData.ownerEmail } : {}),
+      },
       body: JSON.stringify(ticketData),
     });
     return handleResponse(res);
@@ -99,10 +105,25 @@ export const api = {
   },
 
   /**
-   * Fetch Customers
+   * Fetch Customers (scoped to user account)
    */
-  async getCustomers() {
-    const res = await fetch(`${API_BASE}/customers`);
+  async getCustomers(userEmail) {
+    const url = userEmail ? `${API_BASE}/customers?userEmail=${encodeURIComponent(userEmail)}` : `${API_BASE}/customers`;
+    const res = await fetch(url, {
+      headers: userEmail ? { 'x-user-email': userEmail } : {},
+    });
+    return handleResponse(res);
+  },
+
+  /**
+   * Clone demo sample data into a fresh user account
+   */
+  async seedUserDemo(userEmail) {
+    const res = await fetch(`${API_BASE}/user/seed-demo`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userEmail }),
+    });
     return handleResponse(res);
   },
 
