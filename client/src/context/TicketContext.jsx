@@ -2,33 +2,84 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { INITIAL_TICKETS, INITIAL_CUSTOMERS } from '../data/initialData';
 import { useToast } from './ToastContext';
 import { api } from '../services/api';
+import { supabase } from '../services/supabaseClient';
 
 const TicketContext = createContext(null);
 
 const STORAGE_KEY = 'datastraw_crm_tickets_v4';
-const CURRENT_AGENT = {
+const DEFAULT_DEMO_AGENT = {
   name: "Shubham Dubey",
   email: "shubham.dubey@datastraw.io",
   role: "Support Agent",
+  avatarUrl: null,
 };
 
 export function TicketProvider({ children }) {
   const toast = useToast();
-  
-  // Initialize tickets from localStorage or default seed
+
+  // Current authenticated agent (defaults to demo agent if not logged in via Google)
+  const [currentAgent, setCurrentAgent] = useState(() => {
+    try {
+      const stored = localStorage.getItem('datastraw_crm_user');
+      if (stored) return JSON.parse(stored);
+    } catch (_) {}
+    return DEFAULT_DEMO_AGENT;
+  });
+
+  // Listen to Supabase Auth State (Google OAuth login)
+  useEffect(() => {
+    if (!supabase) return;
+
+    // Check existing Supabase session on startup
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const u = session.user;
+        const name = u.user_metadata?.full_name || u.user_metadata?.name || u.email.split('@')[0];
+        const userObj = {
+          name,
+          email: u.email,
+          role: 'Workspace Owner',
+          avatarUrl: u.user_metadata?.avatar_url || null,
+        };
+        setCurrentAgent(userObj);
+        localStorage.setItem('datastraw_crm_user', JSON.stringify(userObj));
+      }
+    });
+
+    // Listen to real-time auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        const name = u.user_metadata?.full_name || u.user_metadata?.name || u.email.split('@')[0];
+        const userObj = {
+          name,
+          email: u.email,
+          role: 'Workspace Owner',
+          avatarUrl: u.user_metadata?.avatar_url || null,
+        };
+        setCurrentAgent(userObj);
+        localStorage.setItem('datastraw_crm_user', JSON.stringify(userObj));
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Initialize tickets (demo account gets INITIAL_TICKETS, fresh accounts start empty)
   const [tickets, setTickets] = useState(() => {
+    if (currentAgent.email !== DEFAULT_DEMO_AGENT.email) {
+      return [];
+    }
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (e) {
-      console.warn('Failed to load tickets from localStorage:', e);
-    }
+      if (stored) return JSON.parse(stored);
+    } catch (_) {}
     return INITIAL_TICKETS;
   });
 
-  const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+  const [customers, setCustomers] = useState(
+    currentAgent.email === DEFAULT_DEMO_AGENT.email ? INITIAL_CUSTOMERS : []
+  );
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -41,36 +92,46 @@ export function TicketProvider({ children }) {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'priority' | 'recently_updated'
 
-  // Fetch from PostgreSQL backend on mount
-  const loadData = useCallback(async () => {
+  // Fetch tickets & customers scoped to current account
+  const loadData = useCallback(async (email) => {
+    const targetEmail = email || currentAgent.email;
     try {
-      const data = await api.getTickets();
-      if (data && Array.isArray(data.tickets) && data.tickets.length > 0) {
+      const data = await api.getTickets({ userEmail: targetEmail });
+      if (data && Array.isArray(data.tickets)) {
         setTickets(data.tickets);
         setIsServerConnected(true);
       }
-      const custData = await api.getCustomers();
+      const custData = await api.getCustomers(targetEmail);
       if (custData && Array.isArray(custData)) {
         setCustomers(custData);
       }
     } catch (err) {
       console.warn('Backend API unavailable, utilizing local storage cache:', err.message);
       setIsServerConnected(false);
+      if (targetEmail === DEFAULT_DEMO_AGENT.email) {
+        setTickets(INITIAL_TICKETS);
+        setCustomers(INITIAL_CUSTOMERS);
+      } else {
+        setTickets([]);
+        setCustomers([]);
+      }
     }
-  }, []);
+  }, [currentAgent.email]);
 
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    loadData(currentAgent.email);
+  }, [loadData, currentAgent.email]);
 
   // Sync to localStorage as offline cache
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
-    } catch (e) {
-      console.warn('Failed to save tickets to localStorage:', e);
+    if (currentAgent.email === DEFAULT_DEMO_AGENT.email) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
+      } catch (e) {
+        console.warn('Failed to save tickets to localStorage:', e);
+      }
     }
-  }, [tickets]);
+  }, [tickets, currentAgent.email]);
 
   // Selected ticket memo
   const selectedTicket = useMemo(() => {
@@ -89,9 +150,9 @@ export function TicketProvider({ children }) {
       open,
       inProgress,
       closed,
-      openTrend: '+8% this week',
-      inProgressTrend: 'Avg response 18m',
-      closedTrend: '98.4% resolution rate',
+      openTrend: total > 0 ? '+8% this week' : '0 tickets active',
+      inProgressTrend: total > 0 ? 'Avg response 18m' : 'Ready for triage',
+      closedTrend: total > 0 ? '98.4% resolution rate' : 'No resolved tickets yet',
     };
   }, [tickets]);
 
@@ -109,23 +170,13 @@ export function TicketProvider({ children }) {
   const filteredTickets = useMemo(() => {
     return tickets
       .filter((ticket) => {
-        // Status tab filter
-        if (statusFilter !== 'All' && ticket.status !== statusFilter) {
-          return false;
-        }
-        // Priority filter
-        if (priorityFilter !== 'All' && ticket.priority !== priorityFilter) {
-          return false;
-        }
-        // Category filter
-        if (categoryFilter !== 'All' && ticket.category !== categoryFilter) {
-          return false;
-        }
-        // Debounced Search: Ticket ID, Customer Name, Email, Subject, Description
+        if (statusFilter !== 'All' && ticket.status !== statusFilter) return false;
+        if (priorityFilter !== 'All' && ticket.priority !== priorityFilter) return false;
+        if (categoryFilter !== 'All' && ticket.category !== categoryFilter) return false;
         if (searchQuery.trim() !== '') {
           const q = searchQuery.toLowerCase().trim();
-          const matchId = ticket.id.toLowerCase().includes(q);
-          const matchSubject = ticket.subject.toLowerCase().includes(q);
+          const matchId = ticket.id?.toLowerCase().includes(q);
+          const matchSubject = ticket.subject?.toLowerCase().includes(q);
           const matchDesc = ticket.description?.toLowerCase().includes(q);
           const matchCustName = ticket.customer?.name?.toLowerCase().includes(q);
           const matchCustEmail = ticket.customer?.email?.toLowerCase().includes(q);
@@ -136,15 +187,9 @@ export function TicketProvider({ children }) {
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === 'newest') {
-          return new Date(b.createdAt) - new Date(a.createdAt);
-        }
-        if (sortBy === 'oldest') {
-          return new Date(a.createdAt) - new Date(b.createdAt);
-        }
-        if (sortBy === 'recently_updated') {
-          return new Date(b.updatedAt) - new Date(a.updatedAt);
-        }
+        if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt);
+        if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
+        if (sortBy === 'recently_updated') return new Date(b.updatedAt) - new Date(a.updatedAt);
         if (sortBy === 'priority') {
           const priorityWeights = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
           return (priorityWeights[b.priority] || 0) - (priorityWeights[a.priority] || 0);
@@ -153,16 +198,9 @@ export function TicketProvider({ children }) {
       });
   }, [tickets, statusFilter, priorityFilter, categoryFilter, searchQuery, sortBy]);
 
-  // Open & Close Detail Panel
-  const openTicketDetail = (ticketId) => {
-    setSelectedTicketId(ticketId);
-  };
+  const openTicketDetail = (ticketId) => setSelectedTicketId(ticketId);
+  const closeTicketDetail = () => setSelectedTicketId(null);
 
-  const closeTicketDetail = () => {
-    setSelectedTicketId(null);
-  };
-
-  // Reset Filters Helper
   const resetFilters = () => {
     setSearchQuery('');
     setStatusFilter('All');
@@ -175,18 +213,23 @@ export function TicketProvider({ children }) {
     return searchQuery !== '' || statusFilter !== 'All' || priorityFilter !== 'All' || categoryFilter !== 'All' || sortBy !== 'newest';
   }, [searchQuery, statusFilter, priorityFilter, categoryFilter, sortBy]);
 
-  // Create Ticket with API call and fallback
+  // Is this account a fresh empty workspace?
+  const isFreshWorkspace = useMemo(() => {
+    return tickets.length === 0 && currentAgent.email !== DEFAULT_DEMO_AGENT.email;
+  }, [tickets.length, currentAgent.email]);
+
+  // Create Ticket
   const createTicket = async (ticketData) => {
     setIsLoading(true);
     const now = new Date().toISOString();
 
     try {
-      // Create on Supabase PostgreSQL backend
       const payload = {
         subject: ticketData.subject.trim(),
         description: ticketData.description.trim(),
         priority: ticketData.priority || 'Medium',
         category: ticketData.category || 'General',
+        ownerEmail: currentAgent.email,
         customer: {
           name: ticketData.customerName.trim(),
           email: ticketData.customerEmail.trim(),
@@ -203,8 +246,7 @@ export function TicketProvider({ children }) {
       toast.success('Ticket Created', `${created.id} — "${created.subject}" has been saved to Supabase.`);
       return created;
     } catch (err) {
-      console.warn('API creation failed, creating locally:', err);
-      // Fallback to local optimistic ticket creation
+      console.warn('API creation failed, falling back to local creation:', err);
       const nextNumber = tickets.length + 1;
       const formattedId = `TKT-${String(nextNumber).padStart(3, '0')}`;
 
@@ -215,6 +257,7 @@ export function TicketProvider({ children }) {
         status: 'Open',
         priority: ticketData.priority || 'Medium',
         category: ticketData.category || 'General',
+        ownerEmail: currentAgent.email,
         customer: {
           name: ticketData.customerName.trim(),
           email: ticketData.customerEmail.trim(),
@@ -222,7 +265,7 @@ export function TicketProvider({ children }) {
           role: 'Customer',
           avatarBg: 'bg-indigo-600 text-white',
         },
-        assignee: CURRENT_AGENT,
+        assignee: currentAgent,
         createdAt: now,
         updatedAt: now,
         timeline: [
@@ -244,12 +287,12 @@ export function TicketProvider({ children }) {
       setIsLoading(false);
       setIsCreateModalOpen(false);
       setSelectedTicketId(formattedId);
-      toast.success('Ticket Created', `${formattedId} — "${ticketData.subject}" created (offline mode).`);
+      toast.success('Ticket Created', `${formattedId} — "${ticketData.subject}" created.`);
       return newTicket;
     }
   };
 
-  // Update Status with optimistic UI and API sync
+  // Update Status
   const updateTicketStatus = async (ticketId, newStatus) => {
     if (!ticketId || !newStatus) return;
 
@@ -263,7 +306,7 @@ export function TicketProvider({ children }) {
           const auditEntry = {
             id: `audit-${Date.now()}`,
             type: 'system_event',
-            author: CURRENT_AGENT,
+            author: currentAgent,
             timestamp: now,
             content: `Status changed from ${oldStatus} to ${newStatus}`,
           };
@@ -287,7 +330,7 @@ export function TicketProvider({ children }) {
     }
   };
 
-  // Update Priority with optimistic UI and API sync
+  // Update Priority
   const updateTicketPriority = async (ticketId, newPriority) => {
     if (!ticketId || !newPriority) return;
 
@@ -301,7 +344,7 @@ export function TicketProvider({ children }) {
           const auditEntry = {
             id: `audit-${Date.now()}`,
             type: 'system_event',
-            author: CURRENT_AGENT,
+            author: currentAgent,
             timestamp: now,
             content: `Priority changed from ${oldPriority} to ${newPriority}`,
           };
@@ -325,15 +368,15 @@ export function TicketProvider({ children }) {
     }
   };
 
-  // Add Reply or Internal Note with optimistic UI and API sync
+  // Add Timeline Entry
   const addTimelineEntry = async (ticketId, content, type = 'agent_reply') => {
     if (!ticketId || !content.trim()) return;
 
     const now = new Date().toISOString();
     const newEntry = {
       id: `act-${Date.now()}`,
-      type: type, // 'agent_reply' | 'internal_note'
-      author: CURRENT_AGENT,
+      type,
+      author: currentAgent,
       timestamp: now,
       content: content.trim(),
     };
@@ -364,22 +407,56 @@ export function TicketProvider({ children }) {
     }
   };
 
-  // Restore Seed Data via Supabase API
-  const restoreSampleData = async () => {
+  // Clone sample demo data into fresh account
+  const loadDemoDataForCurrentUser = async () => {
+    setIsLoading(true);
     try {
-      await api.resetDatabase();
-      await loadData();
-      localStorage.removeItem(STORAGE_KEY);
-      resetFilters();
-      setSelectedTicketId(null);
-      toast.info('Data Reset', 'Restored original demo tickets in Supabase PostgreSQL.');
+      await api.seedUserDemo(currentAgent.email);
+      await loadData(currentAgent.email);
+      toast.success('Sample Data Loaded', '8 demo tickets and customer records loaded into your workspace.');
     } catch (err) {
-      setTickets(INITIAL_TICKETS);
-      localStorage.removeItem(STORAGE_KEY);
-      resetFilters();
-      setSelectedTicketId(null);
-      toast.info('Data Reset', 'Restored original demo tickets and activity.');
+      console.error('Failed to load demo data:', err);
+      toast.error('Error', 'Could not load sample data.');
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  // Reset demo database
+  const restoreSampleData = async () => {
+    if (currentAgent.email === DEFAULT_DEMO_AGENT.email) {
+      try {
+        await api.resetDatabase();
+        await loadData(currentAgent.email);
+        localStorage.removeItem(STORAGE_KEY);
+        resetFilters();
+        setSelectedTicketId(null);
+        toast.info('Data Reset', 'Restored original demo tickets in Supabase PostgreSQL.');
+      } catch (err) {
+        setTickets(INITIAL_TICKETS);
+        setCustomers(INITIAL_CUSTOMERS);
+        localStorage.removeItem(STORAGE_KEY);
+        resetFilters();
+        setSelectedTicketId(null);
+        toast.info('Data Reset', 'Restored original demo tickets locally.');
+      }
+    } else {
+      setTickets([]);
+      setSelectedTicketId(null);
+      resetFilters();
+      toast.info('Workspace Cleared', 'Your tickets have been reset.');
+    }
+  };
+
+  // Sign out helper
+  const logoutUser = async () => {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+    setCurrentAgent(DEFAULT_DEMO_AGENT);
+    localStorage.removeItem('datastraw_crm_user');
+    loadData(DEFAULT_DEMO_AGENT.email);
+    toast.info('Signed Out', 'Returned to Datastraw Demo Workspace.');
   };
 
   return (
@@ -393,6 +470,7 @@ export function TicketProvider({ children }) {
         isCreateModalOpen,
         isLoading,
         isServerConnected,
+        isFreshWorkspace,
         searchQuery,
         statusFilter,
         priorityFilter,
@@ -401,7 +479,7 @@ export function TicketProvider({ children }) {
         stats,
         tabCounts,
         isFiltered,
-        currentAgent: CURRENT_AGENT,
+        currentAgent,
         setSearchQuery,
         setStatusFilter,
         setPriorityFilter,
@@ -417,7 +495,9 @@ export function TicketProvider({ children }) {
         updateTicketPriority,
         addTimelineEntry,
         restoreSampleData,
-        refreshData: loadData,
+        loadDemoDataForCurrentUser,
+        logoutUser,
+        refreshData: () => loadData(currentAgent.email),
       }}
     >
       {children}
