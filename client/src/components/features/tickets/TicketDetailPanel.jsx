@@ -6,6 +6,7 @@ import { Avatar } from '../../common/Avatar';
 import { Button } from '../../common/Button';
 import { Dropdown } from '../../common/Dropdown';
 import { CANNED_MACROS } from '../../../data/initialData';
+import { ConfirmDialog } from '../../common/ConfirmDialog';
 import {
   X,
   Send,
@@ -49,6 +50,8 @@ export function TicketDetailPanel({ ticket, onClose }) {
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [attachments, setAttachments] = useState([]);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isPurgeDialogOpen, setIsPurgeDialogOpen] = useState(false);
+  const [isPurging, setIsPurging] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isMacrosOpen, setIsMacrosOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -67,6 +70,17 @@ export function TicketDetailPanel({ ticket, onClose }) {
     { value: 'Medium', label: 'Medium' },
     { value: 'Low', label: 'Low' },
   ];
+
+  const handleConfirmPurge = async () => {
+    setIsPurging(true);
+    try {
+      await permanentDeleteTicket(ticket.id);
+      setIsPurgeDialogOpen(false);
+      onClose();
+    } finally {
+      setIsPurging(false);
+    }
+  };
 
   const copyEmail = () => {
     if (ticket.customer?.email) {
@@ -248,13 +262,8 @@ export function TicketDetailPanel({ ticket, onClose }) {
             </button>
             <button
               type="button"
-              onClick={async () => {
-                if (window.confirm(`Permanently delete ticket ${ticket.id}? This cannot be undone.`)) {
-                  await permanentDeleteTicket(ticket.id);
-                  onClose();
-                }
-              }}
-              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-colors"
+              onClick={() => setIsPurgeDialogOpen(true)}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-colors shadow-2xs"
             >
               <Trash2 className="w-3 h-3" />
               <span>Purge</span>
@@ -654,6 +663,29 @@ export function TicketDetailPanel({ ticket, onClose }) {
           </div>
         </div>
       )}
+
+      {/* Permanent Delete Card Alert Dialog */}
+      <ConfirmDialog
+        isOpen={isPurgeDialogOpen}
+        onClose={() => setIsPurgeDialogOpen(false)}
+        onConfirm={handleConfirmPurge}
+        isLoading={isPurging}
+        title={`Permanently delete ticket ${ticket.id}?`}
+        description={
+          <div className="space-y-2">
+            <p>
+              Are you sure you want to permanently purge <strong className="font-semibold text-slate-800 dark:text-slate-200">"{ticket.subject}"</strong>?
+            </p>
+            <p className="text-rose-600 dark:text-rose-400 font-medium">
+              This action is irreversible and will permanently delete this ticket, its conversation messages, and timeline history from Supabase PostgreSQL.
+            </p>
+          </div>
+        }
+        confirmLabel="Delete Permanently"
+        cancelLabel="Keep in Trash"
+        variant="danger"
+        icon={Trash2}
+      />
     </div>
   );
 }
