@@ -444,6 +444,53 @@ app.post('/api/tickets/:id/timeline', async (req, res) => {
   }
 });
 
+// 8. DELETE /api/tickets/:id (Delete single ticket)
+app.delete('/api/tickets/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userEmail = getEffectiveUserEmail(req);
+
+    const result = await query(
+      `DELETE FROM tickets WHERE id = $1 AND LOWER(owner_email) = LOWER($2) RETURNING id;`,
+      [id, userEmail]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: `Ticket ${id} not found or unauthorized` });
+    }
+
+    res.json({ message: `Ticket ${id} deleted successfully`, id });
+  } catch (error) {
+    console.error(`Error deleting ticket ${req.params.id}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 9. POST /api/tickets/bulk-delete (Delete multiple tickets)
+app.post('/api/tickets/bulk-delete', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const userEmail = getEffectiveUserEmail(req);
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Array of ticket IDs is required' });
+    }
+
+    const result = await query(
+      `DELETE FROM tickets WHERE id = ANY($1::varchar[]) AND LOWER(owner_email) = LOWER($2) RETURNING id;`,
+      [ids, userEmail]
+    );
+
+    res.json({
+      message: `Deleted ${result.rows.length} tickets`,
+      deletedIds: result.rows.map((r) => r.id),
+    });
+  } catch (error) {
+    console.error('Error bulk deleting tickets:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 8. GET /api/customers (Scoped by user)
 app.get('/api/customers', async (req, res) => {
   try {
