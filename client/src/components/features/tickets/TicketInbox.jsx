@@ -38,6 +38,8 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
     isFiltered,
     resetFilters,
     isLoading,
+    isFreshWorkspace,
+    loadDemoDataForCurrentUser,
   } = useTickets();
 
   const [activeViewMode, setActiveViewMode] = useState('list'); // 'list' | 'kanban' | 'analytics'
@@ -321,17 +323,29 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
               ) : (
                 <tr>
                   <td colSpan={9}>
-                    <EmptyState
-                      type={isFiltered ? 'no_results' : 'empty'}
-                      title={isFiltered ? 'No matching tickets' : 'No tickets in this queue'}
-                      description={
-                        isFiltered
-                          ? 'Try resetting the filters or modifying your search keyword.'
-                          : 'All tickets here have been resolved or moved.'
-                      }
-                      actionLabel={isFiltered ? 'Reset Filters' : '+ New Ticket'}
-                      onAction={isFiltered ? resetFilters : onOpenCreateModal}
-                    />
+                    {isFreshWorkspace && !isFiltered ? (
+                      <EmptyState
+                        type="fresh_workspace"
+                        title="Welcome to your fresh workspace!"
+                        description="You are logged in with your real account. Start clean by creating your first ticket, or load sample demo data anytime to explore the full CRM workflow."
+                        actionLabel="+ Create First Ticket"
+                        onAction={onOpenCreateModal}
+                        secondaryActionLabel="Load Demo Data"
+                        onSecondaryAction={loadDemoDataForCurrentUser}
+                      />
+                    ) : (
+                      <EmptyState
+                        type={isFiltered ? 'no_results' : 'empty'}
+                        title={isFiltered ? 'No matching tickets' : 'No tickets in this queue'}
+                        description={
+                          isFiltered
+                            ? 'Try resetting the filters or modifying your search keyword.'
+                            : 'All tickets here have been resolved or moved.'
+                        }
+                        actionLabel={isFiltered ? 'Reset Filters' : '+ New Ticket'}
+                        onAction={isFiltered ? resetFilters : onOpenCreateModal}
+                      />
+                    )}
                   </td>
                 </tr>
               )}
