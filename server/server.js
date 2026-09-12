@@ -32,7 +32,7 @@ app.use((req, res, next) => {
 
 // Helper: Extract current user email
 function getEffectiveUserEmail(req) {
-  const email = req.query.userEmail || req.headers['x-user-email'] || req.body?.userEmail || '';
+  const email = req.query.userEmail || req.headers['x-user-email'] || req.body?.userEmail || req.body?.ownerEmail || '';
   const trimmed = email.trim().toLowerCase();
   // If no email provided, or explicitly demo account, return DEMO_EMAIL
   if (!trimmed || trimmed === DEMO_EMAIL || trimmed === 'demo@datastraw.io') {
