@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { INITIAL_TICKETS, INITIAL_CUSTOMERS } from '../data/initialData';
 import { useToast } from './ToastContext';
+import { api } from '../services/api';
 
 const TicketContext = createContext(null);
 
@@ -31,6 +32,7 @@ export function TicketProvider({ children }) {
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isServerConnected, setIsServerConnected] = useState(false);
 
   // Filters and search
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,7 +41,29 @@ export function TicketProvider({ children }) {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [sortBy, setSortBy] = useState('newest'); // 'newest' | 'oldest' | 'priority' | 'recently_updated'
 
-  // Sync to localStorage
+  // Fetch from PostgreSQL backend on mount
+  const loadData = useCallback(async () => {
+    try {
+      const data = await api.getTickets();
+      if (data && Array.isArray(data.tickets) && data.tickets.length > 0) {
+        setTickets(data.tickets);
+        setIsServerConnected(true);
+      }
+      const custData = await api.getCustomers();
+      if (custData && Array.isArray(custData)) {
+        setCustomers(custData);
+      }
+    } catch (err) {
+      console.warn('Backend API unavailable, utilizing local storage cache:', err.message);
+      setIsServerConnected(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Sync to localStorage as offline cache
   useEffect(() => {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(tickets));
@@ -98,42 +122,38 @@ export function TicketProvider({ children }) {
           return false;
         }
         // Debounced Search: Ticket ID, Customer Name, Email, Subject, Description
-        if (searchQuery.trim()) {
+        if (searchQuery.trim() !== '') {
           const q = searchQuery.toLowerCase().trim();
           const matchId = ticket.id.toLowerCase().includes(q);
           const matchSubject = ticket.subject.toLowerCase().includes(q);
-          const matchDesc = ticket.description.toLowerCase().includes(q);
-          const matchCustomerName = ticket.customer?.name.toLowerCase().includes(q);
-          const matchCustomerEmail = ticket.customer?.email.toLowerCase().includes(q);
-          if (!matchId && !matchSubject && !matchDesc && !matchCustomerName && !matchCustomerEmail) {
-            return false;
-          }
+          const matchDesc = ticket.description?.toLowerCase().includes(q);
+          const matchCustName = ticket.customer?.name?.toLowerCase().includes(q);
+          const matchCustEmail = ticket.customer?.email?.toLowerCase().includes(q);
+          const matchCustComp = ticket.customer?.company?.toLowerCase().includes(q);
+
+          return matchId || matchSubject || matchDesc || matchCustName || matchCustEmail || matchCustComp;
         }
         return true;
       })
       .sort((a, b) => {
         if (sortBy === 'newest') {
-          const order = ['TKT-007', 'TKT-006', 'TKT-005', 'TKT-004', 'TKT-003', 'TKT-002', 'TKT-001', 'TKT-008'];
-          const idxA = order.indexOf(a.id);
-          const idxB = order.indexOf(b.id);
-          if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.createdAt) - new Date(a.createdAt);
         }
         if (sortBy === 'oldest') {
-          return a.id.localeCompare(b.id);
+          return new Date(a.createdAt) - new Date(b.createdAt);
         }
         if (sortBy === 'recently_updated') {
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
         }
         if (sortBy === 'priority') {
-          const rank = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
-          return (rank[b.priority] || 0) - (rank[a.priority] || 0);
+          const priorityWeights = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
+          return (priorityWeights[b.priority] || 0) - (priorityWeights[a.priority] || 0);
         }
         return 0;
       });
   }, [tickets, statusFilter, priorityFilter, categoryFilter, searchQuery, sortBy]);
 
-  // Actions
+  // Open & Close Detail Panel
   const openTicketDetail = (ticketId) => {
     setSelectedTicketId(ticketId);
   };
@@ -142,6 +162,7 @@ export function TicketProvider({ children }) {
     setSelectedTicketId(null);
   };
 
+  // Reset Filters Helper
   const resetFilters = () => {
     setSearchQuery('');
     setStatusFilter('All');
@@ -154,59 +175,82 @@ export function TicketProvider({ children }) {
     return searchQuery !== '' || statusFilter !== 'All' || priorityFilter !== 'All' || categoryFilter !== 'All' || sortBy !== 'newest';
   }, [searchQuery, statusFilter, priorityFilter, categoryFilter, sortBy]);
 
-  // Create Ticket with validation & simulation
+  // Create Ticket with API call and fallback
   const createTicket = async (ticketData) => {
     setIsLoading(true);
-    // Simulate brief asynchronous processing
-    await new Promise((resolve) => setTimeout(resolve, 350));
-
-    const nextNumber = tickets.length + 1;
-    const formattedId = `TKT-${String(nextNumber).padStart(3, '0')}`;
     const now = new Date().toISOString();
 
-    const newTicket = {
-      id: formattedId,
-      subject: ticketData.subject.trim(),
-      description: ticketData.description.trim(),
-      status: 'Open',
-      priority: ticketData.priority || 'Medium',
-      category: ticketData.category || 'General',
-      customer: {
-        name: ticketData.customerName.trim(),
-        email: ticketData.customerEmail.trim(),
-        company: ticketData.customerCompany?.trim() || 'Direct Client',
-        role: 'Customer',
-        avatarBg: 'bg-indigo-600',
-      },
-      assignee: CURRENT_AGENT,
-      createdAt: now,
-      updatedAt: now,
-      timeline: [
-        {
-          id: `act-${Date.now()}-1`,
-          type: 'customer_message',
-          author: {
-            name: ticketData.customerName.trim(),
-            email: ticketData.customerEmail.trim(),
-            role: 'Customer',
-          },
-          timestamp: now,
-          content: ticketData.description.trim(),
+    try {
+      // Create on Supabase PostgreSQL backend
+      const payload = {
+        subject: ticketData.subject.trim(),
+        description: ticketData.description.trim(),
+        priority: ticketData.priority || 'Medium',
+        category: ticketData.category || 'General',
+        customer: {
+          name: ticketData.customerName.trim(),
+          email: ticketData.customerEmail.trim(),
+          company: ticketData.customerCompany?.trim() || 'Direct Client',
         },
-      ],
-    };
+      };
 
-    setTickets((prev) => [newTicket, ...prev]);
-    setIsLoading(false);
-    setIsCreateModalOpen(false);
-    setSelectedTicketId(formattedId);
+      const created = await api.createTicket(payload);
+      setTickets((prev) => [created, ...prev]);
+      setIsLoading(false);
+      setIsCreateModalOpen(false);
+      setSelectedTicketId(created.id);
+      setIsServerConnected(true);
+      toast.success('Ticket Created', `${created.id} — "${created.subject}" has been saved to Supabase.`);
+      return created;
+    } catch (err) {
+      console.warn('API creation failed, creating locally:', err);
+      // Fallback to local optimistic ticket creation
+      const nextNumber = tickets.length + 1;
+      const formattedId = `TKT-${String(nextNumber).padStart(3, '0')}`;
 
-    toast.success('Ticket Created', `${formattedId} — "${ticketData.subject}" has been logged successfully.`);
-    return newTicket;
+      const newTicket = {
+        id: formattedId,
+        subject: ticketData.subject.trim(),
+        description: ticketData.description.trim(),
+        status: 'Open',
+        priority: ticketData.priority || 'Medium',
+        category: ticketData.category || 'General',
+        customer: {
+          name: ticketData.customerName.trim(),
+          email: ticketData.customerEmail.trim(),
+          company: ticketData.customerCompany?.trim() || 'Direct Client',
+          role: 'Customer',
+          avatarBg: 'bg-indigo-600 text-white',
+        },
+        assignee: CURRENT_AGENT,
+        createdAt: now,
+        updatedAt: now,
+        timeline: [
+          {
+            id: `act-${Date.now()}-1`,
+            type: 'customer_message',
+            author: {
+              name: ticketData.customerName.trim(),
+              email: ticketData.customerEmail.trim(),
+              role: 'Customer',
+            },
+            timestamp: now,
+            content: ticketData.description.trim(),
+          },
+        ],
+      };
+
+      setTickets((prev) => [newTicket, ...prev]);
+      setIsLoading(false);
+      setIsCreateModalOpen(false);
+      setSelectedTicketId(formattedId);
+      toast.success('Ticket Created', `${formattedId} — "${ticketData.subject}" created (offline mode).`);
+      return newTicket;
+    }
   };
 
-  // Update Status
-  const updateTicketStatus = (ticketId, newStatus) => {
+  // Update Status with optimistic UI and API sync
+  const updateTicketStatus = async (ticketId, newStatus) => {
     if (!ticketId || !newStatus) return;
 
     const now = new Date().toISOString();
@@ -235,10 +279,16 @@ export function TicketProvider({ children }) {
     );
 
     toast.success('Status Updated', `${ticketId} is now marked as ${newStatus}`);
+
+    try {
+      await api.updateStatus(ticketId, newStatus);
+    } catch (err) {
+      console.warn('Failed to sync status to backend:', err);
+    }
   };
 
-  // Update Priority
-  const updateTicketPriority = (ticketId, newPriority) => {
+  // Update Priority with optimistic UI and API sync
+  const updateTicketPriority = async (ticketId, newPriority) => {
     if (!ticketId || !newPriority) return;
 
     const now = new Date().toISOString();
@@ -267,10 +317,16 @@ export function TicketProvider({ children }) {
     );
 
     toast.info('Priority Updated', `${ticketId} priority set to ${newPriority}`);
+
+    try {
+      await api.updatePriority(ticketId, newPriority);
+    } catch (err) {
+      console.warn('Failed to sync priority to backend:', err);
+    }
   };
 
-  // Add Reply or Internal Note
-  const addTimelineEntry = (ticketId, content, type = 'agent_reply') => {
+  // Add Reply or Internal Note with optimistic UI and API sync
+  const addTimelineEntry = async (ticketId, content, type = 'agent_reply') => {
     if (!ticketId || !content.trim()) return;
 
     const now = new Date().toISOString();
@@ -300,15 +356,30 @@ export function TicketProvider({ children }) {
     } else {
       toast.success('Reply Sent', `Reply posted to ${ticketId}`);
     }
+
+    try {
+      await api.addTimelineEntry(ticketId, content.trim(), type);
+    } catch (err) {
+      console.warn('Failed to sync timeline entry to backend:', err);
+    }
   };
 
-  // Restore Seed Data
-  const restoreSampleData = () => {
-    setTickets(INITIAL_TICKETS);
-    localStorage.removeItem(STORAGE_KEY);
-    resetFilters();
-    setSelectedTicketId(null);
-    toast.info('Data Reset', 'Restored original demo tickets and activity.');
+  // Restore Seed Data via Supabase API
+  const restoreSampleData = async () => {
+    try {
+      await api.resetDatabase();
+      await loadData();
+      localStorage.removeItem(STORAGE_KEY);
+      resetFilters();
+      setSelectedTicketId(null);
+      toast.info('Data Reset', 'Restored original demo tickets in Supabase PostgreSQL.');
+    } catch (err) {
+      setTickets(INITIAL_TICKETS);
+      localStorage.removeItem(STORAGE_KEY);
+      resetFilters();
+      setSelectedTicketId(null);
+      toast.info('Data Reset', 'Restored original demo tickets and activity.');
+    }
   };
 
   return (
@@ -321,6 +392,7 @@ export function TicketProvider({ children }) {
         selectedTicket,
         isCreateModalOpen,
         isLoading,
+        isServerConnected,
         searchQuery,
         statusFilter,
         priorityFilter,
@@ -345,6 +417,7 @@ export function TicketProvider({ children }) {
         updateTicketPriority,
         addTimelineEntry,
         restoreSampleData,
+        refreshData: loadData,
       }}
     >
       {children}
