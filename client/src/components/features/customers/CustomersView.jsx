@@ -26,8 +26,11 @@ export function CustomersView({ onSelectCustomerTickets }) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-dark-surface p-5 rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark transition-colors duration-200">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-dark-text">Customers Directory</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <div className="type-eyebrow mb-1">CLIENT DIRECTORY</div>
+          <h1 className="type-h2 !text-2xl sm:!text-3xl text-slate-900 dark:text-dark-text tracking-tight">
+            Customer <em>Directory</em>
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Active clients, tier levels, and open support engagement counts.
           </p>
         </div>
@@ -50,7 +53,7 @@ export function CustomersView({ onSelectCustomerTickets }) {
       <div className="bg-white dark:bg-dark-surface rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark overflow-hidden transition-colors duration-200">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50/80 dark:bg-slate-900/50 border-b border-slate-200/80 dark:border-dark-border text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">
+            <thead className="bg-slate-50/80 dark:bg-slate-900/50 border-b border-slate-200/80 dark:border-dark-border text-slate-500 dark:text-slate-400 font-mono text-[11px] uppercase tracking-[0.14em] font-medium">
               <tr>
                 <th className="px-5 py-3">Customer</th>
                 <th className="px-5 py-3">Company</th>

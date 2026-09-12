@@ -56,7 +56,7 @@ export function Modal({
           <div className="flex items-start justify-between p-5 border-b border-slate-100 dark:border-dark-border bg-slate-50/50 dark:bg-slate-900/40">
             <div>
               {title && (
-                <h3 id="modal-title" className="text-base font-semibold text-slate-900 dark:text-dark-text tracking-tight">
+                <h3 id="modal-title" className="font-display font-[540] text-lg text-slate-900 dark:text-dark-text tracking-tight">
                   {title}
                 </h3>
               )}

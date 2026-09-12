@@ -181,23 +181,18 @@ export function AuthPage({ initialMode = 'login', onNavigate }) {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           {/* Left Column: Social Proof, Floating Testimonial, 3D Mockup */}
           <div className="lg:col-span-7 space-y-6 text-left">
-            {/* Trust Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800/60 shadow-2xs">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Support teams around the world trust Datastraw</span>
+            {/* Eyebrow */}
+            <div className="type-eyebrow mb-2">
+              SUPPORT CRM PLATFORM
             </div>
 
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-[1.12]">
-              Better Support.{' '}
-              <span className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 bg-clip-text text-transparent">
-                Happier
-              </span>{' '}
-              Customers.
+            <h1 className="type-h1 !text-3xl sm:!text-4xl lg:!text-5xl">
+              Better Support. <em>Happier</em> Customers.
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
+            <p className="type-lede text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg">
               A modern customer support CRM to manage tickets, collaborate with your team, and deliver exceptional customer experiences — all in one place.
             </p>
 
@@ -334,8 +329,12 @@ export function AuthPage({ initialMode = 'login', onNavigate }) {
                 <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-400 flex items-center justify-center text-white shadow-md mx-auto">
                   <Hexagon className="w-5 h-5 fill-white/20 stroke-white stroke-[2.5]" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight">
-                  {mode === 'login' ? 'Welcome back' : 'Create your account'}
+                <h2 className="type-h2 !text-2xl sm:!text-3xl tracking-tight">
+                  {mode === 'login' ? (
+                    <>Welcome <em>Back</em></>
+                  ) : (
+                    <>Create <em>Your Account</em></>
+                  )}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   {mode === 'login'

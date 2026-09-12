@@ -38,8 +38,11 @@ export function AppLayout({ onNavigate }) {
           <div className="space-y-4 max-w-7xl mx-auto animate-fade-in-up">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-dark-surface p-5 rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark transition-colors duration-200">
               <div>
-                <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-dark-text">Support Tickets</h1>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <div className="type-eyebrow mb-1">INBOX STREAM</div>
+                <h1 className="type-h2 !text-2xl sm:!text-3xl text-slate-900 dark:text-dark-text tracking-tight">
+                  Support <em>Tickets</em>
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
                   Full inbox stream. Filter by urgency, queue status, or search across customer issues.
                 </p>
               </div>

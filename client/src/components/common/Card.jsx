@@ -59,7 +59,8 @@ export function StatCard({
   index = 0,
 }) {
   const numericValue = typeof value === 'number' ? value : parseInt(value, 10);
-  const animatedNumber = !isNaN(numericValue) ? useCountUp(numericValue, 700, index * 80) : value;
+  const countUpVal = useCountUp(!isNaN(numericValue) ? numericValue : 0, 700, index * 80);
+  const animatedNumber = !isNaN(numericValue) ? countUpVal : value;
 
   // Determine sparkline based on title or type
   let sparklineKey = sparklineType;
@@ -70,7 +71,6 @@ export function StatCard({
   else if (titleLower.includes('closed')) sparklineKey = 'closed';
 
   const sparkline = SPARKLINE_CONFIGS[sparklineKey] || SPARKLINE_CONFIGS.total;
-  const isUpTrend = trendDirection === 'up' || (trend && trend.startsWith('+')) || (trend && trend.includes('↑'));
   const isDownTrend = trendDirection === 'down' || (trend && trend.startsWith('-')) || (trend && trend.includes('↓'));
 
   // Clean trend text
@@ -124,7 +124,7 @@ export function StatCard({
       {/* Bottom Content: Number + Trend on left, Sparkline on right */}
       <div className="mt-1 flex items-end justify-between gap-2">
         <div>
-          <div className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-dark-text tabular-nums">
+          <div className="text-2xl sm:text-3xl font-display font-[540] tracking-tight text-slate-900 dark:text-dark-text tabular-nums">
             {!isNaN(numericValue) ? animatedNumber : value}
           </div>
 

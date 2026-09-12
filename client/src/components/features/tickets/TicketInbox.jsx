@@ -143,10 +143,11 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
       {/* 1. Header Row: Workspace Title + View Switchers */}
       <div className="p-5 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-dark-border">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-dark-text tracking-tight">
-            Ticket Workspace
+          <div className="type-eyebrow mb-1">QUEUE MANAGEMENT</div>
+          <h2 className="type-h2 !text-xl sm:!text-2xl text-slate-900 dark:text-dark-text tracking-tight">
+            Ticket <em>Workspace</em>
           </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Manage, triage, and reply to client inquiries
           </p>
         </div>
@@ -334,7 +335,7 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
         <div className="overflow-x-auto min-h-[360px]">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="border-b border-slate-200/80 dark:border-dark-border text-[11px] font-bold text-slate-500 dark:text-dark-text-secondary uppercase tracking-wider bg-slate-50/50 dark:bg-slate-900/30">
+              <tr className="border-b border-slate-200/80 dark:border-dark-border font-mono text-[11px] font-medium text-slate-500 dark:text-dark-text-secondary uppercase tracking-[0.14em] bg-slate-50/50 dark:bg-slate-900/30">
                 {/* Checkbox Header */}
                 <th className="py-3 pl-4 pr-2 w-10 text-center">
                   <input

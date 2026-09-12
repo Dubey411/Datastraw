@@ -57,6 +57,31 @@
     color: var(--ink);
   }
 
+  /* Universal Editorial Headings: Fraunces serif */
+  h1, h2 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+  }
+
+  h1 {
+    font-weight: 520;
+    letter-spacing: -0.015em;
+    line-height: 1.06;
+  }
+
+  h2 {
+    font-weight: 540;
+    letter-spacing: -0.01em;
+    line-height: 1.14;
+  }
+
+  h1 em, h1 i, h2 em, h2 i {
+    font-style: italic;
+    color: var(--brand);
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+  }
+
   /* Temporary class during theme toggle for 300ms smooth transition */
   .theme-transition,
   .theme-transition *,

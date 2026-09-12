@@ -276,7 +276,7 @@ export function TicketDetailPanel({ ticket, onClose }) {
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
         {/* Ticket Subject */}
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-          <h2 className="text-lg font-bold text-slate-900 dark:text-dark-text tracking-tight leading-snug">
+          <h2 className="font-display font-[540] text-xl text-slate-900 dark:text-dark-text tracking-tight leading-snug">
             {ticket.subject}
           </h2>
           <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 dark:text-slate-400">

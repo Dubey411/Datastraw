@@ -27,8 +27,11 @@ export function AnalyticsView() {
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in-up">
       {/* Header */}
       <div className="bg-white dark:bg-dark-surface p-5 rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark transition-colors duration-200">
-        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-dark-text">Support Analytics & SLA Performance</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        <div className="type-eyebrow mb-1">PERFORMANCE INTELLIGENCE</div>
+        <h1 className="type-h2 !text-2xl sm:!text-3xl text-slate-900 dark:text-dark-text tracking-tight">
+          Support Analytics & <em>SLA Velocity</em>
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Real-time metrics covering turnaround velocity, customer satisfaction, and queue distribution.
         </p>
       </div>
@@ -105,8 +108,8 @@ export function AnalyticsView() {
         {/* Priority Breakdown & SLA */}
         <div className="bg-white dark:bg-dark-surface p-5 rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark space-y-4 transition-colors duration-200">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-dark-text">SLA Compliance Targets</h3>
-            <span className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
+            <h3 className="type-h3 !text-sm">SLA Compliance Targets</h3>
+            <span className="font-mono text-xs text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800/60">
               All Targets Met
             </span>
           </div>
@@ -115,25 +118,25 @@ export function AnalyticsView() {
             <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/70 dark:border-dark-border flex items-center justify-between transition-colors">
               <div>
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Urgent Priority (P1)</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">Target response: &lt; 30 mins</span>
+                <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">Target response: &lt; 30 mins</span>
               </div>
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">99.2%</span>
+              <span className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">99.2%</span>
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/70 dark:border-dark-border flex items-center justify-between transition-colors">
               <div>
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">High Priority (P2)</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">Target response: &lt; 2 hours</span>
+                <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">Target response: &lt; 2 hours</span>
               </div>
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">98.8%</span>
+              <span className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">98.8%</span>
             </div>
 
             <div className="p-3 bg-slate-50 dark:bg-slate-900/60 rounded-xl border border-slate-200/70 dark:border-dark-border flex items-center justify-between transition-colors">
               <div>
                 <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block">Normal / Low Priority</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400">Target response: &lt; 8 hours</span>
+                <span className="font-mono text-[11px] text-slate-500 dark:text-slate-400">Target response: &lt; 8 hours</span>
               </div>
-              <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">99.7%</span>
+              <span className="font-mono text-sm font-bold text-emerald-600 dark:text-emerald-400">99.7%</span>
             </div>
           </div>
         </div>

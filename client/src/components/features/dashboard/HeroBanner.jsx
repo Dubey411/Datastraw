@@ -48,16 +48,20 @@ export function HeroBanner({ onOpenCreateModal, onOpenAnalytics }) {
       <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         {/* Left Col: Greeting, Headline & CTAs */}
         <div className="lg:col-span-7 space-y-3.5">
-          <div className="text-xs sm:text-sm font-medium text-slate-200 flex items-center gap-1.5">
-            <span>{timeGreeting}, <strong className="text-white font-semibold">Shubham!</strong></span>
-            <span>👋</span>
+          <div className="flex items-center gap-2">
+            <div className="type-eyebrow !text-indigo-200">INTELLIGENT WORKSPACE</div>
+            <span className="text-slate-400">·</span>
+            <div className="text-xs font-medium text-slate-200 flex items-center gap-1.5">
+              <span>{timeGreeting}, <strong className="text-white font-semibold">Shubham!</strong></span>
+              <span>👋</span>
+            </div>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">
-            Great support builds<br className="hidden sm:inline" /> greater products.
+          <h1 className="type-h1 !text-2xl sm:!text-3xl lg:!text-4xl text-white">
+            Great support builds<br className="hidden sm:inline" /> <em className="!text-indigo-300">greater products.</em>
           </h1>
 
-          <p className="text-xs sm:text-sm text-slate-200/90 max-w-lg leading-relaxed">
+          <p className="type-body text-xs sm:text-sm text-slate-200/90 max-w-lg leading-relaxed">
             Manage tickets, help customers, and make an impact — all in one place.
           </p>
 

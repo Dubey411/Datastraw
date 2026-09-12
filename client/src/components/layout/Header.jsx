@@ -17,7 +17,6 @@ import {
   ShieldCheck,
   Sun,
   Moon,
-  Globe,
   LogOut,
 } from 'lucide-react';
 
@@ -306,18 +305,6 @@ export function Header({ onOpenMobileMenu, onNavigate }) {
               </div>
 
               <div className="space-y-0.5">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProfileOpen(false);
-                    onNavigate?.('landing');
-                  }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-surface-hover hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors text-left"
-                >
-                  <Globe className="w-3.5 h-3.5 text-indigo-500" />
-                  <span>Landing Page</span>
-                </button>
-
                 {isFreshWorkspace ? (
                   <button
                     type="button"

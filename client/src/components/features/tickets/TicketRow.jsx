@@ -85,7 +85,7 @@ export function TicketRow({
 
       {/* Ticket ID # */}
       <td className="py-3.5 px-3 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200">
-        <span className="font-semibold text-xs tracking-tight">{ticket.id}</span>
+        <span className="font-mono text-xs tracking-tight font-medium text-slate-900 dark:text-slate-100">{ticket.id}</span>
       </td>
 
       {/* Customer Avatar & Name & Email */}

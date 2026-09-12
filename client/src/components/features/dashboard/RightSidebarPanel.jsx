@@ -106,11 +106,11 @@ export function RightSidebarPanel() {
             <div className="w-7 h-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/80 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
               <Sparkles className="w-4 h-4" />
             </div>
-            <h3 className="text-sm font-bold text-slate-900 dark:text-dark-text tracking-tight">
+            <h3 className="type-h3 !text-sm">
               AI Support Assistant
             </h3>
           </div>
-          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
+          <span className="font-mono text-[11px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
             Beta
           </span>
         </div>
@@ -211,7 +211,7 @@ export function RightSidebarPanel() {
       {/* 2. Recent Activity Card */}
       <div className="bg-white dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border p-5 shadow-xs dark:shadow-card-dark transition-all">
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-dark-border">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-dark-text tracking-tight">
+          <h3 className="type-h3 !text-sm">
             Recent Activity
           </h3>
           <a
@@ -323,10 +323,10 @@ export function RightSidebarPanel() {
       {/* 3. Support Performance Card */}
       <div className="bg-white dark:bg-dark-surface rounded-2xl border border-slate-200/80 dark:border-dark-border p-5 shadow-xs dark:shadow-card-dark transition-all">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-dark-text tracking-tight">
+          <h3 className="type-h3 !text-sm">
             Support Performance
           </h3>
-          <div className="flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-dark-border px-2 py-0.5 rounded-lg cursor-pointer">
+          <div className="flex items-center gap-1 text-[11px] font-mono font-medium text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-dark-border px-2 py-0.5 rounded-lg cursor-pointer">
             <span>{selectedTimeframe}</span>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </div>
@@ -346,7 +346,7 @@ export function RightSidebarPanel() {
                 }}
               />
               {/* Tooltip */}
-              <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:block bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded shadow whitespace-nowrap z-20 pointer-events-none">
+              <div className="absolute -top-7 left-1/2 -translate-x-1/2 hidden group-hover:block bg-slate-900 text-white font-mono text-[10px] px-1.5 py-0.5 rounded shadow whitespace-nowrap z-20 pointer-events-none">
                 {bar.height}%
               </div>
             </div>
@@ -356,7 +356,7 @@ export function RightSidebarPanel() {
         {/* Bottom Metrics */}
         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-dark-border flex items-center justify-between">
           <div>
-            <span className="text-lg font-bold text-slate-900 dark:text-dark-text tracking-tight block">
+            <span className="font-mono text-lg font-bold text-slate-900 dark:text-dark-text tracking-tight block">
               98.4%
             </span>
             <span className="text-[11px] text-slate-400 dark:text-slate-500">
@@ -365,7 +365,7 @@ export function RightSidebarPanel() {
           </div>
 
           <div className="text-right">
-            <span className="text-lg font-bold text-slate-900 dark:text-dark-text tracking-tight block">
+            <span className="font-mono text-lg font-bold text-slate-900 dark:text-dark-text tracking-tight block">
               18m
             </span>
             <span className="text-[11px] text-slate-400 dark:text-slate-500">

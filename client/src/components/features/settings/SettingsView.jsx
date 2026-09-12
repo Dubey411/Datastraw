@@ -42,8 +42,11 @@ export function SettingsView() {
     <div className="space-y-6 max-w-4xl mx-auto animate-fade-in-up">
       {/* Header */}
       <div className="bg-white dark:bg-dark-surface p-5 rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark transition-colors duration-200">
-        <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-dark-text">CRM Preferences & Profile</h1>
-        <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+        <div className="type-eyebrow mb-1">CONFIGURATION</div>
+        <h1 className="type-h2 !text-2xl sm:!text-3xl text-slate-900 dark:text-dark-text tracking-tight">
+          Workspace <em>Settings & Profile</em>
+        </h1>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Manage your support agent credentials, theme appearance, and notification rules.
         </p>
       </div>
@@ -52,7 +55,7 @@ export function SettingsView() {
       <div className="bg-white dark:bg-dark-surface p-5 rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark space-y-4 transition-colors duration-200">
         <div className="flex items-center gap-2 border-b border-slate-100 dark:border-dark-border pb-3">
           <Sun className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
-          <h2 className="text-sm font-bold text-slate-900 dark:text-dark-text">Theme Appearance</h2>
+          <h2 className="type-h3 !text-sm">Theme Appearance</h2>
         </div>
 
         <p className="text-xs text-slate-500 dark:text-slate-400">

@@ -50,8 +50,11 @@ export function KnowledgeBaseView() {
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in-up">
       <div className="bg-white dark:bg-dark-surface p-5 rounded-xl border border-slate-200/80 dark:border-dark-border shadow-xs dark:shadow-card-dark flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors duration-200">
         <div>
-          <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-dark-text">Knowledge Base & Guides</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+          <div className="type-eyebrow mb-1">DOCUMENTATION & GUIDES</div>
+          <h1 className="type-h2 !text-2xl sm:!text-3xl text-slate-900 dark:text-dark-text tracking-tight">
+            Knowledge <em>Base & Guides</em>
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             Internal documentation, troubleshooting guides, and API integration references.
           </p>
         </div>

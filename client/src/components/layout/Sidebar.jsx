@@ -199,12 +199,9 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
           )}
         >
           <div
-            onClick={() => onNavigate?.('landing')}
-            className={cn(
-              'flex items-center gap-2.5 min-w-0',
-              onNavigate && 'cursor-pointer group'
-            )}
-            title="Go to Datastraw Landing Page"
+            onClick={() => onViewChange?.('dashboard')}
+            className="flex items-center gap-2.5 min-w-0 cursor-pointer group"
+            title="Datastraw Support CRM"
           >
             {/* Datastraw 3D Isometric Cube Logo */}
             <svg

@@ -31,7 +31,7 @@ export function StatusBadge({ status, size = 'md', className }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border shadow-2xs select-none tracking-tight transition-all duration-200 gap-1.5',
+        'inline-flex items-center rounded-full border shadow-2xs select-none font-mono tracking-tight transition-all duration-200 gap-1.5',
         config.styles,
         sizes[size],
         className
@@ -82,7 +82,7 @@ export function PriorityBadge({ priority, size = 'md', className }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full border select-none transition-all duration-200',
+        'inline-flex items-center rounded-full border select-none font-mono tracking-tight transition-all duration-200',
         config.styles,
         sizes[size],
         className
@@ -98,7 +98,7 @@ export function CategoryBadge({ category, className }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700/60 transition-colors',
+        'inline-flex items-center text-[11px] font-mono font-medium px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600 border border-slate-200/60 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700/60 transition-colors',
         className
       )}
     >
