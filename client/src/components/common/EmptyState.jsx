@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../utils/cn';
 import { Button } from './Button';
-import { Inbox, SearchX, AlertCircle, Sparkles } from 'lucide-react';
+import { Inbox, SearchX, AlertCircle, Sparkles, Trash2 } from 'lucide-react';
 
 export function EmptyState({
   type = 'empty',
@@ -27,6 +27,13 @@ export function EmptyState({
       defaultTitle: 'No tickets in this view',
       defaultDescription: 'All caught up! There are no tickets matching this tab right now.',
       defaultAction: '+ New Ticket',
+    },
+    trash_empty: {
+      icon: Trash2,
+      iconBg: 'bg-rose-50 text-rose-600 dark:bg-rose-950/70 dark:text-rose-400 border border-rose-200 dark:border-rose-900/50',
+      defaultTitle: 'Trash is empty',
+      defaultDescription: 'No soft-deleted tickets found. Any tickets you move to trash will appear here and can be restored anytime.',
+      defaultAction: 'View All Tickets',
     },
     no_results: {
       icon: SearchX,
