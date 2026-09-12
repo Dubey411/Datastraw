@@ -30,6 +30,42 @@ export function TicketProvider({ children }) {
   useEffect(() => {
     if (!supabase) return;
 
+    // Explicit fallback: If URL has access_token, extract and set session immediately
+    const hash = window.location.hash;
+    if (hash.includes('access_token=')) {
+      try {
+        const tokenPart = hash.substring(hash.indexOf('access_token='));
+        const params = new URLSearchParams(tokenPart);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        if (accessToken) {
+          supabase.auth
+            .setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken || '',
+            })
+            .then(({ data, error }) => {
+              if (data?.session?.user) {
+                const u = data.session.user;
+                const name = u.user_metadata?.full_name || u.user_metadata?.name || u.email.split('@')[0];
+                const userObj = {
+                  name,
+                  email: u.email,
+                  role: 'Workspace Owner',
+                  avatarUrl: u.user_metadata?.avatar_url || null,
+                };
+                setCurrentAgent(userObj);
+                localStorage.setItem('datastraw_crm_user', JSON.stringify(userObj));
+                loadData(u.email);
+                window.history.replaceState(null, '', window.location.pathname + '#app');
+              }
+            });
+        }
+      } catch (err) {
+        console.warn('Error setting session from URL hash:', err);
+      }
+    }
+
     // Check existing Supabase session on startup
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -43,6 +79,7 @@ export function TicketProvider({ children }) {
         };
         setCurrentAgent(userObj);
         localStorage.setItem('datastraw_crm_user', JSON.stringify(userObj));
+        loadData(u.email);
       }
     });
 
@@ -59,11 +96,15 @@ export function TicketProvider({ children }) {
         };
         setCurrentAgent(userObj);
         localStorage.setItem('datastraw_crm_user', JSON.stringify(userObj));
+        loadData(u.email);
+        if (window.location.hash.includes('access_token=')) {
+          window.history.replaceState(null, '', window.location.pathname + '#app');
+        }
       }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadData]);
 
   // Initialize tickets (demo account gets INITIAL_TICKETS, fresh accounts start empty)
   const [tickets, setTickets] = useState(() => {
