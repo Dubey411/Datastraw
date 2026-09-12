@@ -32,7 +32,7 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
       id: 'tickets',
       label: 'Tickets',
       icon: Inbox,
-      badge: tabCounts?.All || 8,
+      badge: tabCounts?.All ?? 0,
     },
     {
       id: 'customers',
@@ -270,38 +270,54 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
 
       {/* User Profile Pill at Bottom */}
       <div className="p-3 border-t border-slate-800/80 flex-shrink-0 relative z-10 bg-[#0B0E1B]">
-        <div
-          className={cn(
-            'flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/60 transition-colors cursor-pointer',
-            isCollapsed && 'justify-center p-1.5'
-          )}
-        >
-          {/* Avatar SD */}
-          <div className="w-8 h-8 rounded-full bg-indigo-700/80 border border-indigo-500/40 text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
-            SD
-          </div>
+        {(() => {
+          const agentName = currentAgent?.name || 'Support Agent';
+          const agentEmail = currentAgent?.email || 'shubham.dubey@datastraw.io';
+          const initials = agentName
+            .split(' ')
+            .filter(Boolean)
+            .map((n) => n[0])
+            .join('')
+            .slice(0, 2)
+            .toUpperCase() || 'SD';
 
-          {!isCollapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-white truncate leading-tight">
-                Shubham Dubey
-              </p>
-              <p className="text-[11px] text-slate-400 truncate leading-tight mt-0.5">
-                Support Agent
-              </p>
-            </div>
-          )}
-
-          {!isCollapsed && (
-            <button
-              type="button"
-              className="text-slate-400 hover:text-white p-1 rounded transition-colors"
-              aria-label="User settings"
+          return (
+            <div
+              onClick={() => onViewChange?.('settings')}
+              className={cn(
+                'flex items-center gap-3 p-2 rounded-xl hover:bg-slate-800/60 transition-colors cursor-pointer group',
+                isCollapsed && 'justify-center p-1.5'
+              )}
+              title={`${agentName} (${agentEmail})`}
             >
-              <MoreVertical className="w-4 h-4" />
-            </button>
-          )}
-        </div>
+              {/* Dynamic Avatar Initials */}
+              <div className="w-8 h-8 rounded-full bg-indigo-700/80 border border-indigo-500/40 text-white font-bold text-xs flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                {initials}
+              </div>
+
+              {!isCollapsed && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-white truncate leading-tight">
+                    {agentName}
+                  </p>
+                  <p className="text-[11px] text-slate-400 truncate leading-tight mt-0.5">
+                    {agentEmail}
+                  </p>
+                </div>
+              )}
+
+              {!isCollapsed && (
+                <button
+                  type="button"
+                  className="text-slate-400 hover:text-white p-1 rounded transition-colors"
+                  aria-label="User settings"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
