@@ -60,20 +60,27 @@ app.get('/api/health', async (req, res) => {
   }
 });
 
-// Helper: Format raw DB ticket into frontend shape
+// Helper: Format raw DB ticket into frontend shape and PDF assessment spec
 function formatTicket(row, timelineRows = []) {
+  const notes = timelineRows.filter((t) => t.type === 'internal_note').map((t) => t.content);
   return {
     id: row.id,
+    ticket_id: row.id,
     subject: row.subject,
     description: row.description,
     status: row.status,
     priority: row.priority,
     category: row.category,
+    customer_name: row.customer_name || 'Anonymous Customer',
+    customer_email: row.customer_email || 'support@client.com',
+    notes: notes.length > 0 ? notes : timelineRows.map((t) => t.content),
     ownerEmail: row.owner_email,
     deletedAt: row.deleted_at || null,
     isDeleted: Boolean(row.deleted_at),
     createdAt: row.created_at,
+    created_at: row.created_at,
     updatedAt: row.updated_at,
+    updated_at: row.updated_at,
     customer: {
       id: row.customer_id,
       name: row.customer_name || 'Anonymous Customer',
@@ -270,22 +277,37 @@ app.get('/api/tickets/:id', async (req, res) => {
   }
 });
 
-// 4. POST /api/tickets (Create Ticket with user scoping)
+// 4. POST /api/tickets (Create Ticket with user scoping and assessment spec support)
 app.post('/api/tickets', async (req, res) => {
   try {
     const ownerEmail = getEffectiveUserEmail(req);
-    const { subject, description, priority = 'Medium', category = 'General', customer } = req.body;
+    const {
+      subject,
+      title,
+      description,
+      priority = 'Medium',
+      category = 'General',
+      customer,
+      customer_name,
+      customer_email,
+      customer_company,
+    } = req.body;
 
-    if (!subject || !subject.trim()) {
+    const finalSubject = (subject || title || '').trim();
+    if (!finalSubject) {
       return res.status(400).json({ error: 'Subject is required' });
     }
 
+    const custName = (customer?.name || customer_name || 'New Client').trim();
+    const custEmail = (customer?.email || customer_email || '').trim();
+    const custCompany = (customer?.company || customer_company || 'Direct Inquiry').trim();
+
     // Determine or create Customer scoped to ownerEmail
     let customerId = customer?.id || null;
-    if (customer?.email) {
+    if (custEmail) {
       const custRes = await query(
         `SELECT id FROM customers WHERE LOWER(email) = LOWER($1) AND LOWER(owner_email) = LOWER($2);`,
-        [customer.email, ownerEmail]
+        [custEmail, ownerEmail]
       );
       if (custRes.rows.length > 0) {
         customerId = custRes.rows[0].id;
@@ -296,10 +318,10 @@ app.post('/api/tickets', async (req, res) => {
            VALUES ($1, $2, $3, $4, $5, $6, $7);`,
           [
             customerId,
-            customer.name || 'New Client',
-            customer.email,
-            customer.company || 'Direct Inquiry',
-            customer.role || 'Customer',
+            custName,
+            custEmail,
+            custCompany,
+            'Customer',
             'bg-indigo-600 text-white',
             ownerEmail,
           ]
@@ -317,7 +339,7 @@ app.post('/api/tickets', async (req, res) => {
     await query(
       `INSERT INTO tickets (id, subject, description, status, priority, category, customer_id, assignee_id, owner_email, created_at, updated_at)
        VALUES ($1, $2, $3, 'Open', $4, $5, $6, 'AGENT-01', $7, $8, $8);`,
-      [ticketId, subject.trim(), description || '', priority, category, customerId, ownerEmail, now]
+      [ticketId, finalSubject, description || '', priority, category, customerId, ownerEmail, now]
     );
 
     // Initial timeline message
@@ -325,7 +347,7 @@ app.post('/api/tickets', async (req, res) => {
     await query(
       `INSERT INTO timeline_entries (id, ticket_id, type, author_name, author_email, author_role, content, created_at)
        VALUES ($1, $2, 'customer_message', $3, $4, 'Customer', $5, $6);`,
-      [actId, ticketId, customer?.name || 'Customer', customer?.email || '', description || subject, now]
+      [actId, ticketId, custName, custEmail, description || finalSubject, now]
     );
 
     // Fetch and return newly created ticket
@@ -347,9 +369,75 @@ app.post('/api/tickets', async (req, res) => {
       [ticketId]
     );
 
-    res.status(201).json(formatTicket(createdRes.rows[0], timelineRes.rows));
+    const createdTicket = formatTicket(createdRes.rows[0], timelineRes.rows);
+    res.status(201).json({
+      ...createdTicket,
+      ticket_id: ticketId,
+      created_at: now,
+    });
   } catch (error) {
     console.error('Error creating ticket:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 5. PUT /api/tickets/:id (Update ticket status and notes - PDF assessment REST specification)
+app.put('/api/tickets/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, notes, priority, subject, description } = req.body;
+    const now = new Date().toISOString();
+
+    const currentTicket = await query('SELECT * FROM tickets WHERE id = $1;', [id]);
+    if (currentTicket.rows.length === 0) {
+      return res.status(404).json({ error: `Ticket ${id} not found` });
+    }
+
+    const updates = [];
+    const params = [id];
+
+    if (status) {
+      params.push(status);
+      updates.push(`status = $${params.length}`);
+    }
+    if (priority) {
+      params.push(priority);
+      updates.push(`priority = $${params.length}`);
+    }
+    if (subject) {
+      params.push(subject);
+      updates.push(`subject = $${params.length}`);
+    }
+    if (description) {
+      params.push(description);
+      updates.push(`description = $${params.length}`);
+    }
+
+    params.push(now);
+    updates.push(`updated_at = $${params.length}`);
+
+    await query(`UPDATE tickets SET ${updates.join(', ')} WHERE id = $1;`, params);
+
+    // If note provided, add to timeline
+    if (notes && typeof notes === 'string' && notes.trim()) {
+      const entryId = `act-${Date.now()}`;
+      await query(
+        `INSERT INTO timeline_entries (id, ticket_id, type, author_name, author_email, author_role, content, created_at)
+         VALUES ($1, $2, 'internal_note', 'Support Agent', 'agent@datastraw.io', 'Support Agent', $3, $4);`,
+        [entryId, id, notes.trim(), now]
+      );
+    }
+
+    res.json({
+      success: true,
+      ticket_id: id,
+      id,
+      status: status || currentTicket.rows[0].status,
+      updated_at: now,
+      updatedAt: now,
+    });
+  } catch (error) {
+    console.error(`Error updating ticket ${req.params.id}:`, error);
     res.status(500).json({ error: error.message });
   }
 });
