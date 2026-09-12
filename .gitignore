@@ -13,6 +13,8 @@ dist-ssr
 *.local
 .env
 .env.*
+!.env.example
+!*.example
 client/node_modules
 client/dist
 server/node_modules
