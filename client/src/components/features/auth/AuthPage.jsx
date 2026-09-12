@@ -57,6 +57,7 @@ export function AuthPage({ initialMode = 'login', onNavigate }) {
     if (provider === 'Google') {
       try {
         if (isSupabaseConfigured) {
+          sessionStorage.setItem('datastraw_auth_intent', 'app');
           toast.info('Connecting to Google...', 'Redirecting to Google secure authentication.');
           await signInWithGoogle();
           return;
