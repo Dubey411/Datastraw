@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS customers (
   role VARCHAR(100),
   status VARCHAR(50) DEFAULT 'Pro',
   avatar_bg VARCHAR(100) DEFAULT 'bg-blue-600 text-white',
+  owner_email VARCHAR(255) DEFAULT 'shubham.dubey@datastraw.io',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   category VARCHAR(50) NOT NULL DEFAULT 'General',
   customer_id VARCHAR(50) REFERENCES customers(id) ON DELETE SET NULL,
   assignee_id VARCHAR(50) REFERENCES agents(id) ON DELETE SET NULL,
+  owner_email VARCHAR(255) DEFAULT 'shubham.dubey@datastraw.io',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -52,5 +54,7 @@ CREATE TABLE IF NOT EXISTS timeline_entries (
 CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
 CREATE INDEX IF NOT EXISTS idx_tickets_priority ON tickets(priority);
 CREATE INDEX IF NOT EXISTS idx_tickets_category ON tickets(category);
+CREATE INDEX IF NOT EXISTS idx_tickets_owner ON tickets(owner_email);
 CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_timeline_ticket_id ON timeline_entries(ticket_id);
+CREATE INDEX IF NOT EXISTS idx_customers_owner ON customers(owner_email);
