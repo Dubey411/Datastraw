@@ -4,6 +4,7 @@ import { Dropdown } from '../../common/Dropdown';
 import { TicketRow } from './TicketRow';
 import { TicketRowSkeleton } from '../../common/Skeleton';
 import { EmptyState } from '../../common/EmptyState';
+import { ConfirmDialog } from '../../common/ConfirmDialog';
 import {
   Search,
   X,
@@ -48,6 +49,8 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
 
   const [activeViewMode, setActiveViewMode] = useState('list'); // 'list' | 'kanban' | 'analytics'
   const [selectedTicketIds, setSelectedTicketIds] = useState(new Set());
+  const [isBulkPurgeDialogOpen, setIsBulkPurgeDialogOpen] = useState(false);
+  const [isBulkPurging, setIsBulkPurging] = useState(false);
 
   // Toggle individual ticket checkbox
   const handleToggleCheck = (ticketId) => {
@@ -86,12 +89,20 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
     setSelectedTicketIds(new Set());
   };
 
-  const handleBulkPermanentDelete = async () => {
+  const handleBulkPermanentDelete = () => {
     if (selectedTicketIds.size === 0) return;
-    const count = selectedTicketIds.size;
-    if (window.confirm(`Are you sure you want to permanently delete ${count} selected ticket${count > 1 ? 's' : ''}? This cannot be undone.`)) {
+    setIsBulkPurgeDialogOpen(true);
+  };
+
+  const handleConfirmBulkPurge = async () => {
+    if (selectedTicketIds.size === 0) return;
+    setIsBulkPurging(true);
+    try {
       await bulkPermanentDeleteTickets(Array.from(selectedTicketIds));
       setSelectedTicketIds(new Set());
+      setIsBulkPurgeDialogOpen(false);
+    } finally {
+      setIsBulkPurging(false);
     }
   };
 
@@ -521,6 +532,29 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
           </div>
         )}
       </div>
+
+      {/* Bulk Permanent Purge Card Alert Dialog */}
+      <ConfirmDialog
+        isOpen={isBulkPurgeDialogOpen}
+        onClose={() => setIsBulkPurgeDialogOpen(false)}
+        onConfirm={handleConfirmBulkPurge}
+        isLoading={isBulkPurging}
+        title={`Permanently purge ${selectedTicketIds.size} selected ticket${selectedTicketIds.size > 1 ? 's' : ''}?`}
+        description={
+          <div className="space-y-2">
+            <p>
+              Are you sure you want to permanently purge these <strong className="font-semibold text-slate-800 dark:text-slate-200">{selectedTicketIds.size} tickets</strong> from Trash?
+            </p>
+            <p className="text-rose-600 dark:text-rose-400 font-medium">
+              All associated customer conversation replies and timeline audit records will be removed permanently. This action cannot be undone.
+            </p>
+          </div>
+        }
+        confirmLabel={`Purge ${selectedTicketIds.size} Ticket${selectedTicketIds.size > 1 ? 's' : ''}`}
+        cancelLabel="Keep in Trash"
+        variant="danger"
+        icon={Trash2}
+      />
     </div>
   );
 }
