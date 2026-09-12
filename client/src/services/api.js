@@ -1,5 +1,6 @@
 // Datastraw API Service with Multi-Tenant Account Isolation
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL
+  || (import.meta.env.DEV ? '/api' : 'https://datastraw-9xoy.onrender.com/api');
 
 /**
  * Helper to handle fetch responses
