@@ -27,6 +27,9 @@ export function Header({ onOpenMobileMenu, onNavigate }) {
     setSearchQuery,
     currentAgent,
     restoreSampleData,
+    logoutUser,
+    isFreshWorkspace,
+    loadDemoDataForCurrentUser,
   } = useTickets();
 
   const { theme, toggleTheme, isDark } = useTheme();
@@ -315,22 +318,37 @@ export function Header({ onOpenMobileMenu, onNavigate }) {
                   <span>Landing Page</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    restoreSampleData();
-                    setIsProfileOpen(false);
-                  }}
-                  className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-surface-hover hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors text-left"
-                >
-                  <RotateCcw className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
-                  <span>Reset Demo Tickets</span>
-                </button>
+                {isFreshWorkspace ? (
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      setIsProfileOpen(false);
+                      await loadDemoDataForCurrentUser();
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/30 rounded-lg transition-colors text-left"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Load Demo Data</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      restoreSampleData();
+                      setIsProfileOpen(false);
+                    }}
+                    className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-surface-hover hover:text-slate-900 dark:hover:text-white rounded-lg transition-colors text-left"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
+                    <span>Reset Demo Tickets</span>
+                  </button>
+                )}
 
                 <button
                   type="button"
-                  onClick={() => {
+                  onClick={async () => {
                     setIsProfileOpen(false);
+                    if (logoutUser) await logoutUser();
                     onNavigate?.('login');
                   }}
                   className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs font-medium text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors text-left"
