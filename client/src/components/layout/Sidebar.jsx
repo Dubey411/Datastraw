@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { cn } from '../../utils/cn';
 import { useTickets } from '../../context/TicketContext';
+import { useTheme } from '../../context/ThemeContext';
 import {
   LayoutDashboard,
   Inbox,
@@ -19,6 +20,7 @@ import {
 
 export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate }) {
   const { tabCounts, currentAgent } = useTickets();
+  const { isDark } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [hoveredItem, setHoveredItem] = useState(null);
 
@@ -74,15 +76,28 @@ export function Sidebar({ activeView, onViewChange, isOpen, onClose, onNavigate 
         <div className="absolute bottom-64 right-12 w-1 h-1 bg-purple-200/40 rounded-full" />
         <div className="absolute bottom-40 left-8 w-1 h-1 bg-white/30 rounded-full" />
 
-        {/* Planet with soft glowing purple aura */}
+        {/* Planet / Orb with soft glowing aura */}
         <div
           className={cn(
-            'absolute -left-10 top-[52%] -translate-y-1/2 w-28 h-28 rounded-full bg-gradient-to-tr from-slate-950 via-[#1E1645] to-[#4338CA] shadow-[0_0_50px_rgba(99,102,241,0.25)] border border-indigo-500/20 opacity-80 pointer-events-none transition-all duration-300',
-            isCollapsed && 'opacity-60 scale-90 -left-8'
+            'absolute -left-10 top-[52%] -translate-y-1/2 w-28 h-28 rounded-full pointer-events-none transition-all duration-300 overflow-hidden',
+            isCollapsed && 'opacity-60 scale-90 -left-8',
+            isDark
+              ? 'bg-gradient-to-tr from-slate-950 via-[#1E1645] to-[#4338CA] shadow-[0_0_50px_rgba(99,102,241,0.25)] border border-indigo-500/20 opacity-80'
+              : 'shadow-[0_0_40px_rgba(168,85,247,0.35)] border border-indigo-300/30 opacity-90'
           )}
         >
-          <div className="absolute inset-0 rounded-full bg-gradient-to-b from-transparent via-transparent to-slate-950/80" />
-          <div className="absolute top-3 right-4 w-6 h-6 rounded-full bg-indigo-400/20 blur-sm" />
+          {isDark ? (
+            <>
+              <div className="absolute inset-0 rounded-full bg-gradient-to-b from-transparent via-transparent to-slate-950/80" />
+              <div className="absolute top-3 right-4 w-6 h-6 rounded-full bg-indigo-400/20 blur-sm" />
+            </>
+          ) : (
+            <img
+              src="/sidebar_orb_light.png"
+              alt="Light theme orb"
+              className="w-full h-full object-cover rounded-full select-none filter contrast-105"
+            />
+          )}
         </div>
       </div>
 
