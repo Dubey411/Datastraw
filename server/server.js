@@ -70,6 +70,8 @@ function formatTicket(row, timelineRows = []) {
     priority: row.priority,
     category: row.category,
     ownerEmail: row.owner_email,
+    deletedAt: row.deleted_at || null,
+    isDeleted: Boolean(row.deleted_at),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     customer: {
@@ -100,15 +102,17 @@ function formatTicket(row, timelineRows = []) {
   };
 }
 
-// 2. GET /api/tickets (List with user isolation, filters, & stats)
+// 2. GET /api/tickets (List with user isolation, filters, stats, & trash support)
 app.get('/api/tickets', async (req, res) => {
   try {
     const userEmail = getEffectiveUserEmail(req);
-    const { status, priority, category, search, sortBy } = req.query;
+    const { status, priority, category, search, sortBy, showTrash } = req.query;
+
+    const isTrashView = showTrash === 'true' || status === 'Trash';
 
     let sql = `
       SELECT 
-        t.id, t.subject, t.description, t.status, t.priority, t.category, t.owner_email, t.created_at, t.updated_at,
+        t.id, t.subject, t.description, t.status, t.priority, t.category, t.owner_email, t.deleted_at, t.created_at, t.updated_at,
         c.id as customer_id, c.name as customer_name, c.email as customer_email, c.company as customer_company, c.role as customer_role, c.avatar_bg as customer_avatar_bg,
         a.id as assignee_id, a.name as assignee_name, a.email as assignee_email, a.role as assignee_role
       FROM tickets t
@@ -118,9 +122,14 @@ app.get('/api/tickets', async (req, res) => {
     `;
     const params = [userEmail];
 
-    if (status && status !== 'All') {
-      params.push(status);
-      sql += ` AND LOWER(t.status) = LOWER($${params.length})`;
+    if (isTrashView) {
+      sql += ` AND t.deleted_at IS NOT NULL`;
+    } else {
+      sql += ` AND t.deleted_at IS NULL`;
+      if (status && status !== 'All') {
+        params.push(status);
+        sql += ` AND LOWER(t.status) = LOWER($${params.length})`;
+      }
     }
 
     if (priority && priority !== 'All') {
@@ -182,38 +191,42 @@ app.get('/api/tickets', async (req, res) => {
       formatTicket(row, timelinesByTicket[row.id] || [])
     );
 
-    // Aggregate counts specifically for this user's workspace
+    // Aggregate counts specifically for this user's workspace (active vs trash)
     const countsRes = await query(`
       SELECT 
-        COUNT(*) as total,
-        COUNT(*) FILTER (WHERE status = 'Open') as open,
-        COUNT(*) FILTER (WHERE status = 'In Progress') as in_progress,
-        COUNT(*) FILTER (WHERE status = 'Closed') as closed
+        COUNT(*) FILTER (WHERE deleted_at IS NULL) as total,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND status = 'Open') as open,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND status = 'In Progress') as in_progress,
+        COUNT(*) FILTER (WHERE deleted_at IS NULL AND status = 'Closed') as closed,
+        COUNT(*) FILTER (WHERE deleted_at IS NOT NULL) as trash
       FROM tickets
       WHERE LOWER(owner_email) = LOWER($1);
     `, [userEmail]);
 
     const counts = countsRes.rows[0];
-    const totalCount = parseInt(counts.total, 10);
+    const totalActiveCount = parseInt(counts.total, 10);
+    const totalTrashCount = parseInt(counts.trash, 10);
 
     res.json({
       tickets,
-      isFreshWorkspace: totalCount === 0 && userEmail !== DEMO_EMAIL,
+      isFreshWorkspace: totalActiveCount === 0 && totalTrashCount === 0 && userEmail !== DEMO_EMAIL,
       ownerEmail: userEmail,
       stats: {
-        total: totalCount,
+        total: totalActiveCount,
         open: parseInt(counts.open, 10),
         inProgress: parseInt(counts.in_progress, 10),
         closed: parseInt(counts.closed, 10),
-        openTrend: totalCount > 0 ? '+8% this week' : '0 tickets active',
-        inProgressTrend: totalCount > 0 ? 'Avg response 18m' : 'Ready for triage',
-        closedTrend: totalCount > 0 ? '98.4% resolution rate' : 'No resolved tickets yet',
+        trash: totalTrashCount,
+        openTrend: totalActiveCount > 0 ? '+8% this week' : '0 tickets active',
+        inProgressTrend: totalActiveCount > 0 ? 'Avg response 18m' : 'Ready for triage',
+        closedTrend: totalActiveCount > 0 ? '98.4% resolution rate' : 'No resolved tickets yet',
       },
       tabCounts: {
-        All: totalCount,
+        All: totalActiveCount,
         Open: parseInt(counts.open, 10),
         'In Progress': parseInt(counts.in_progress, 10),
         Closed: parseInt(counts.closed, 10),
+        Trash: totalTrashCount,
       },
     });
   } catch (error) {
@@ -228,7 +241,7 @@ app.get('/api/tickets/:id', async (req, res) => {
     const { id } = req.params;
     const ticketRes = await query(
       `SELECT 
-        t.id, t.subject, t.description, t.status, t.priority, t.category, t.owner_email, t.created_at, t.updated_at,
+        t.id, t.subject, t.description, t.status, t.priority, t.category, t.owner_email, t.deleted_at, t.created_at, t.updated_at,
         c.id as customer_id, c.name as customer_name, c.email as customer_email, c.company as customer_company, c.role as customer_role, c.avatar_bg as customer_avatar_bg,
         a.id as assignee_id, a.name as assignee_name, a.email as assignee_email, a.role as assignee_role
       FROM tickets t
@@ -444,30 +457,138 @@ app.post('/api/tickets/:id/timeline', async (req, res) => {
   }
 });
 
-// 8. DELETE /api/tickets/:id (Delete single ticket)
+// 8. DELETE /api/tickets/:id (Soft delete to trash, or permanent purge)
 app.delete('/api/tickets/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const { permanent, authorName = 'Support Agent', authorEmail = 'agent@datastraw.io' } = req.query;
     const userEmail = getEffectiveUserEmail(req);
 
+    if (permanent === 'true') {
+      const result = await query(
+        `DELETE FROM tickets WHERE id = $1 AND LOWER(owner_email) = LOWER($2) RETURNING id;`,
+        [id, userEmail]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({ error: `Ticket ${id} not found or unauthorized` });
+      }
+
+      return res.json({ message: `Ticket ${id} permanently deleted`, id, permanent: true });
+    }
+
+    // Soft delete: set deleted_at to now
+    const now = new Date().toISOString();
     const result = await query(
-      `DELETE FROM tickets WHERE id = $1 AND LOWER(owner_email) = LOWER($2) RETURNING id;`,
-      [id, userEmail]
+      `UPDATE tickets SET deleted_at = $1, updated_at = $1 WHERE id = $2 AND LOWER(owner_email) = LOWER($3) RETURNING id;`,
+      [now, id, userEmail]
     );
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: `Ticket ${id} not found or unauthorized` });
     }
 
-    res.json({ message: `Ticket ${id} deleted successfully`, id });
+    // Record audit event in timeline
+    const auditId = `audit-${Date.now()}`;
+    await query(
+      `INSERT INTO timeline_entries (id, ticket_id, type, author_name, author_email, author_role, content, created_at)
+       VALUES ($1, $2, 'system_event', $3, $4, 'Support Agent', 'Ticket moved to Trash', $5);`,
+      [auditId, id, authorName, authorEmail, now]
+    );
+
+    res.json({ message: `Ticket ${id} moved to Trash`, id, deletedAt: now });
   } catch (error) {
     console.error(`Error deleting ticket ${req.params.id}:`, error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// 9. POST /api/tickets/bulk-delete (Delete multiple tickets)
-app.post('/api/tickets/bulk-delete', async (req, res) => {
+// 9. POST /api/tickets/:id/restore (Restore ticket from trash)
+app.post('/api/tickets/:id/restore', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { authorName = 'Support Agent', authorEmail = 'agent@datastraw.io' } = req.body || {};
+    const userEmail = getEffectiveUserEmail(req);
+    const now = new Date().toISOString();
+
+    const result = await query(
+      `UPDATE tickets SET deleted_at = NULL, updated_at = $1 WHERE id = $2 AND LOWER(owner_email) = LOWER($3) RETURNING id;`,
+      [now, id, userEmail]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: `Ticket ${id} not found or unauthorized` });
+    }
+
+    // Record audit event in timeline
+    const auditId = `audit-${Date.now()}`;
+    await query(
+      `INSERT INTO timeline_entries (id, ticket_id, type, author_name, author_email, author_role, content, created_at)
+       VALUES ($1, $2, 'system_event', $3, $4, 'Support Agent', 'Ticket restored from Trash', $5);`,
+      [auditId, id, authorName, authorEmail, now]
+    );
+
+    res.json({ message: `Ticket ${id} restored from Trash`, id });
+  } catch (error) {
+    console.error(`Error restoring ticket ${req.params.id}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 10. POST /api/tickets/bulk-trash (Move multiple tickets to trash)
+app.post('/api/tickets/bulk-trash', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const userEmail = getEffectiveUserEmail(req);
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Array of ticket IDs is required' });
+    }
+
+    const now = new Date().toISOString();
+    const result = await query(
+      `UPDATE tickets SET deleted_at = $1, updated_at = $1 WHERE id = ANY($2::varchar[]) AND LOWER(owner_email) = LOWER($3) RETURNING id;`,
+      [now, ids, userEmail]
+    );
+
+    res.json({
+      message: `Moved ${result.rows.length} tickets to Trash`,
+      trashedIds: result.rows.map((r) => r.id),
+    });
+  } catch (error) {
+    console.error('Error bulk trashing tickets:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 11. POST /api/tickets/bulk-restore (Restore multiple tickets from trash)
+app.post('/api/tickets/bulk-restore', async (req, res) => {
+  try {
+    const { ids } = req.body;
+    const userEmail = getEffectiveUserEmail(req);
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({ error: 'Array of ticket IDs is required' });
+    }
+
+    const now = new Date().toISOString();
+    const result = await query(
+      `UPDATE tickets SET deleted_at = NULL, updated_at = $1 WHERE id = ANY($2::varchar[]) AND LOWER(owner_email) = LOWER($3) RETURNING id;`,
+      [now, ids, userEmail]
+    );
+
+    res.json({
+      message: `Restored ${result.rows.length} tickets from Trash`,
+      restoredIds: result.rows.map((r) => r.id),
+    });
+  } catch (error) {
+    console.error('Error bulk restoring tickets:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 12. POST /api/tickets/bulk-permanent-delete (Permanently purge multiple tickets)
+app.post('/api/tickets/bulk-permanent-delete', async (req, res) => {
   try {
     const { ids } = req.body;
     const userEmail = getEffectiveUserEmail(req);
@@ -482,11 +603,11 @@ app.post('/api/tickets/bulk-delete', async (req, res) => {
     );
 
     res.json({
-      message: `Deleted ${result.rows.length} tickets`,
+      message: `Permanently purged ${result.rows.length} tickets`,
       deletedIds: result.rows.map((r) => r.id),
     });
   } catch (error) {
-    console.error('Error bulk deleting tickets:', error);
+    console.error('Error bulk permanently deleting tickets:', error);
     res.status(500).json({ error: error.message });
   }
 });
