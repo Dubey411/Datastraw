@@ -1,7 +1,7 @@
 import React from 'react';
 import { cn } from '../../../utils/cn';
 import { StatusBadge, PriorityBadge, CategoryBadge } from '../../common/Badge';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 
 export function TicketRow({
   ticket,
@@ -122,7 +122,14 @@ export function TicketRow({
 
       {/* Status */}
       <td className="py-3.5 px-3 whitespace-nowrap">
-        <StatusBadge status={ticket.status} size="sm" />
+        {ticket.isDeleted ? (
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-rose-50 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900/60 shadow-2xs">
+            <Trash2 className="w-3 h-3" />
+            <span>In Trash</span>
+          </span>
+        ) : (
+          <StatusBadge status={ticket.status} size="sm" />
+        )}
       </td>
 
       {/* Priority */}
