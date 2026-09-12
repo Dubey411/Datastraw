@@ -30,6 +30,7 @@ import {
   FileText,
   Loader2,
   Trash2,
+  RotateCcw,
 } from 'lucide-react';
 
 export function TicketDetailPanel({ ticket, onClose }) {
@@ -37,7 +38,9 @@ export function TicketDetailPanel({ ticket, onClose }) {
     updateTicketStatus,
     updateTicketPriority,
     addTimelineEntry,
-    deleteTicket,
+    softDeleteTicket,
+    restoreTicket,
+    permanentDeleteTicket,
     currentAgent,
   } = useTickets();
 
@@ -169,13 +172,25 @@ export function TicketDetailPanel({ ticket, onClose }) {
         </div>
 
         <div className="flex items-center gap-1.5">
-          {isConfirmingDelete ? (
+          {ticket.isDeleted ? (
+            <button
+              type="button"
+              onClick={async () => {
+                await restoreTicket(ticket.id);
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 transition-colors shadow-2xs"
+              title="Restore ticket"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>Restore</span>
+            </button>
+          ) : isConfirmingDelete ? (
             <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 text-xs animate-in fade-in zoom-in-95 duration-150">
-              <span className="text-rose-600 dark:text-rose-400 text-[11px] font-semibold">Delete?</span>
+              <span className="text-rose-600 dark:text-rose-400 text-[11px] font-semibold">Move to Trash?</span>
               <button
                 type="button"
                 onClick={async () => {
-                  await deleteTicket(ticket.id);
+                  await softDeleteTicket(ticket.id);
                   onClose();
                 }}
                 className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[11px] font-semibold transition-colors"
@@ -195,8 +210,8 @@ export function TicketDetailPanel({ ticket, onClose }) {
               type="button"
               onClick={() => setIsConfirmingDelete(true)}
               className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
-              title="Delete ticket"
-              aria-label="Delete ticket"
+              title="Move ticket to Trash"
+              aria-label="Move ticket to Trash"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -212,6 +227,41 @@ export function TicketDetailPanel({ ticket, onClose }) {
           </button>
         </div>
       </div>
+
+      {/* Trash Banner when ticket is soft-deleted */}
+      {ticket.isDeleted && (
+        <div className="px-6 py-3 bg-rose-50/90 dark:bg-rose-950/70 border-b border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-3 text-xs flex-shrink-0 animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 text-rose-800 dark:text-rose-200 font-semibold">
+            <Trash2 className="w-4 h-4 text-rose-600 dark:text-rose-400 flex-shrink-0" />
+            <span>This ticket is currently in the Trash</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={async () => {
+                await restoreTicket(ticket.id);
+              }}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 shadow-2xs transition-colors"
+            >
+              <RotateCcw className="w-3 h-3" />
+              <span>Restore</span>
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (window.confirm(`Permanently delete ticket ${ticket.id}? This cannot be undone.`)) {
+                  await permanentDeleteTicket(ticket.id);
+                  onClose();
+                }
+              }}
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-lg bg-rose-600 hover:bg-rose-500 text-white transition-colors"
+            >
+              <Trash2 className="w-3 h-3" />
+              <span>Purge</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Scrollable Area */}
       <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
@@ -366,223 +416,244 @@ export function TicketDetailPanel({ ticket, onClose }) {
         </div>
       </div>
 
-      {/* Sticky Bottom Reply Composer */}
-      <div className="p-4 border-t border-slate-200 dark:border-dark-border bg-white dark:bg-dark-surface shadow-lg space-y-3 flex-shrink-0">
-        {/* Composer Tabs */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
-            <button
-              type="button"
-              onClick={() => setComposerMode('reply')}
-              className={cn(
-                'px-3 py-1 text-xs font-semibold rounded-md transition-all duration-150',
-                composerMode === 'reply'
-                  ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+      {/* Sticky Bottom Area: Composer or Archived Trash Notice */}
+      {ticket.isDeleted ? (
+        <div className="p-4 border-t border-slate-200 dark:border-dark-border bg-slate-50/90 dark:bg-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left flex-shrink-0">
+          <div>
+            <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+              This ticket is archived in the Trash.
+            </p>
+            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Restore the ticket anytime to continue conversation or add internal notes.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            variant="primary"
+            icon={RotateCcw}
+            onClick={() => restoreTicket(ticket.id)}
+          >
+            Restore Ticket
+          </Button>
+        </div>
+      ) : (
+        <div className="p-4 border-t border-slate-200 dark:border-dark-border bg-white dark:bg-dark-surface shadow-lg space-y-3 flex-shrink-0">
+          {/* Composer Tabs */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 p-0.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+              <button
+                type="button"
+                onClick={() => setComposerMode('reply')}
+                className={cn(
+                  'px-3 py-1 text-xs font-semibold rounded-md transition-all duration-150',
+                  composerMode === 'reply'
+                    ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                )}
+              >
+                Public Reply
+              </button>
+              <button
+                type="button"
+                onClick={() => setComposerMode('internal_note')}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition-all duration-150',
+                  composerMode === 'internal_note'
+                    ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 shadow-2xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                )}
+              >
+                <Lock className="w-3 h-3" />
+                Internal Note
+              </button>
+            </div>
+
+            {/* Quick Macros Picker */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setIsMacrosOpen(!isMacrosOpen)}
+                className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 px-2 py-1 rounded-lg transition-colors"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>Use Macro</span>
+              </button>
+
+              {isMacrosOpen && (
+                <div className="absolute right-0 bottom-full mb-2 w-72 bg-white dark:bg-dark-surface rounded-xl border border-slate-200 dark:border-dark-border shadow-dropdown dark:shadow-dropdown-dark p-1 z-50 animate-in fade-in zoom-in-95">
+                  <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-dark-border">
+                    Pre-saved Macros
+                  </div>
+                  <div className="py-1 max-h-48 overflow-y-auto">
+                    {CANNED_MACROS.map((macro) => (
+                      <button
+                        key={macro.id}
+                        type="button"
+                        onClick={() => insertMacro(macro)}
+                        className="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-surface-hover rounded-lg transition-colors"
+                      >
+                        <p className="font-semibold text-slate-900 dark:text-dark-text">{macro.title}</p>
+                        <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 mt-0.5">{macro.content}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               )}
-            >
-              Public Reply
-            </button>
-            <button
-              type="button"
-              onClick={() => setComposerMode('internal_note')}
-              className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-md transition-all duration-150',
-                composerMode === 'internal_note'
-                  ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 shadow-2xs'
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-              )}
-            >
-              <Lock className="w-3 h-3" />
-              Internal Note
-            </button>
+            </div>
           </div>
 
-          {/* Quick Macros Picker */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setIsMacrosOpen(!isMacrosOpen)}
-              className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 hover:bg-indigo-50 dark:hover:bg-indigo-950/60 px-2 py-1 rounded-lg transition-colors"
-            >
-              <Sparkles className="w-3 h-3" />
-              <span>Use Macro</span>
-            </button>
+          {/* Text Area Container */}
+          <div
+            className={cn(
+              'rounded-xl border transition-all duration-200 overflow-hidden focus-within:ring-2',
+              composerMode === 'internal_note'
+                ? 'border-amber-300 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20 focus-within:ring-amber-500/20 focus-within:border-amber-500'
+                : 'border-slate-200 dark:border-dark-border bg-white dark:bg-slate-900/60 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 dark:focus-within:border-indigo-500'
+            )}
+          >
+            {/* Formatting Toolbar */}
+            <div className="px-3 py-1.5 border-b border-slate-100 dark:border-dark-border bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between text-slate-500 dark:text-slate-400">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => insertFormatting('**', '**')}
+                  className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  title="Bold"
+                >
+                  <Bold className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertFormatting('*', '*')}
+                  className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  title="Italic"
+                >
+                  <Italic className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertFormatting('`', '`')}
+                  className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  title="Inline Code"
+                >
+                  <Code className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertFormatting('\n- ')}
+                  className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
+                  title="Bullet List"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </button>
+              </div>
 
-            {isMacrosOpen && (
-              <div className="absolute right-0 bottom-full mb-2 w-72 bg-white dark:bg-dark-surface rounded-xl border border-slate-200 dark:border-dark-border shadow-dropdown dark:shadow-dropdown-dark p-1 z-50 animate-in fade-in zoom-in-95">
-                <div className="px-3 py-1.5 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-dark-border">
-                  Pre-saved Macros
-                </div>
-                <div className="py-1 max-h-48 overflow-y-auto">
-                  {CANNED_MACROS.map((macro) => (
+              <div className="relative flex items-center gap-1">
+                {/* Attachment */}
+                <button
+                  type="button"
+                  onClick={addSimulatedAttachment}
+                  className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  title="Attach file"
+                >
+                  <Paperclip className="w-3.5 h-3.5" />
+                </button>
+                {/* Mention */}
+                <button
+                  type="button"
+                  onClick={() => setReplyText((prev) => prev + ` @${ticket.customer?.name} `)}
+                  className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  title="Mention customer"
+                >
+                  <AtSign className="w-3.5 h-3.5" />
+                </button>
+                {/* Emoji popover */}
+                <button
+                  type="button"
+                  onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                  className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  title="Add emoji"
+                >
+                  <Smile className="w-3.5 h-3.5" />
+                </button>
+
+                {isEmojiPickerOpen && (
+                  <div className="absolute right-0 bottom-full mb-2 bg-white dark:bg-dark-surface border border-slate-200 dark:border-dark-border rounded-xl p-2 shadow-dropdown dark:shadow-dropdown-dark flex gap-1 z-50">
+                    {emojis.map((emoji) => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        onClick={() => {
+                          setReplyText((prev) => prev + ` ${emoji} `);
+                          setIsEmojiPickerOpen(false);
+                        }}
+                        className="text-base p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <textarea
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              onKeyDown={handleKeyDown}
+              rows={3}
+              placeholder={
+                composerMode === 'internal_note'
+                  ? 'Leave a private note for your team (visible only internally)...'
+                  : `Reply to ${ticket.customer?.name} (Ctrl + Enter to send)...`
+              }
+              className="w-full bg-transparent p-3 text-xs sm:text-sm text-slate-900 dark:text-dark-text placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none resize-none leading-relaxed"
+            />
+
+            {/* Attachments preview */}
+            {attachments.length > 0 && (
+              <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
+                {attachments.map((file, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                  >
+                    <FileText className="w-3 h-3 text-slate-400" />
+                    {file}
                     <button
-                      key={macro.id}
                       type="button"
-                      onClick={() => insertMacro(macro)}
-                      className="w-full text-left px-3 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-dark-surface-hover rounded-lg transition-colors"
+                      onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}
+                      className="hover:text-rose-600 dark:hover:text-rose-400 ml-0.5"
                     >
-                      <p className="font-semibold text-slate-900 dark:text-dark-text">{macro.title}</p>
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500 line-clamp-1 mt-0.5">{macro.content}</p>
+                      <X className="w-3 h-3" />
                     </button>
-                  ))}
-                </div>
+                  </span>
+                ))}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Text Area Container */}
-        <div
-          className={cn(
-            'rounded-xl border transition-all duration-200 overflow-hidden focus-within:ring-2',
-            composerMode === 'internal_note'
-              ? 'border-amber-300 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20 focus-within:ring-amber-500/20 focus-within:border-amber-500'
-              : 'border-slate-200 dark:border-dark-border bg-white dark:bg-slate-900/60 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 dark:focus-within:border-indigo-500'
-          )}
-        >
-          {/* Formatting Toolbar */}
-          <div className="px-3 py-1.5 border-b border-slate-100 dark:border-dark-border bg-slate-50/50 dark:bg-slate-900/40 flex items-center justify-between text-slate-500 dark:text-slate-400">
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={() => insertFormatting('**', '**')}
-                className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-                title="Bold"
-              >
-                <Bold className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('*', '*')}
-                className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-                title="Italic"
-              >
-                <Italic className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('`', '`')}
-                className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-                title="Inline Code"
-              >
-                <Code className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={() => insertFormatting('\n- ')}
-                className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white"
-                title="Bullet List"
-              >
-                <List className="w-3.5 h-3.5" />
-              </button>
-            </div>
+          {/* Footer Actions */}
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
+              Press <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px]">Ctrl+Enter</kbd> to send
+            </span>
 
-            <div className="relative flex items-center gap-1">
-              {/* Attachment */}
-              <button
-                type="button"
-                onClick={addSimulatedAttachment}
-                className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                title="Attach file"
+            <div className="flex items-center gap-2 ml-auto">
+              <Button
+                size="sm"
+                variant={composerMode === 'internal_note' ? 'secondary' : 'primary'}
+                onClick={handleSend}
+                isLoading={isSubmitting}
+                disabled={!replyText.trim()}
+                icon={Send}
               >
-                <Paperclip className="w-3.5 h-3.5" />
-              </button>
-              {/* Mention */}
-              <button
-                type="button"
-                onClick={() => setReplyText((prev) => prev + ` @${ticket.customer?.name} `)}
-                className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                title="Mention customer"
-              >
-                <AtSign className="w-3.5 h-3.5" />
-              </button>
-              {/* Emoji popover */}
-              <button
-                type="button"
-                onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                className="p-1 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
-                title="Add emoji"
-              >
-                <Smile className="w-3.5 h-3.5" />
-              </button>
-
-              {isEmojiPickerOpen && (
-                <div className="absolute right-0 bottom-full mb-2 bg-white dark:bg-dark-surface border border-slate-200 dark:border-dark-border rounded-xl p-2 shadow-dropdown dark:shadow-dropdown-dark flex gap-1 z-50">
-                  {emojis.map((emoji) => (
-                    <button
-                      key={emoji}
-                      type="button"
-                      onClick={() => {
-                        setReplyText((prev) => prev + ` ${emoji} `);
-                        setIsEmojiPickerOpen(false);
-                      }}
-                      className="text-base p-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
-                    >
-                      {emoji}
-                    </button>
-                  ))}
-                </div>
-              )}
+                {composerMode === 'internal_note' ? 'Save Note' : 'Send Reply'}
+              </Button>
             </div>
           </div>
-
-          <textarea
-            value={replyText}
-            onChange={(e) => setReplyText(e.target.value)}
-            onKeyDown={handleKeyDown}
-            rows={3}
-            placeholder={
-              composerMode === 'internal_note'
-                ? 'Leave a private note for your team (visible only internally)...'
-                : `Reply to ${ticket.customer?.name} (Ctrl + Enter to send)...`
-            }
-            className="w-full bg-transparent p-3 text-xs sm:text-sm text-slate-900 dark:text-dark-text placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none resize-none leading-relaxed"
-          />
-
-          {/* Attachments preview */}
-          {attachments.length > 0 && (
-            <div className="px-3 pb-2 flex items-center gap-1.5 flex-wrap">
-              {attachments.map((file, idx) => (
-                <span
-                  key={idx}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
-                >
-                  <FileText className="w-3 h-3 text-slate-400" />
-                  {file}
-                  <button
-                    type="button"
-                    onClick={() => setAttachments(attachments.filter((_, i) => i !== idx))}
-                    className="hover:text-rose-600 dark:hover:text-rose-400 ml-0.5"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
         </div>
-
-        {/* Footer Actions */}
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] text-slate-400 dark:text-slate-500 hidden sm:inline">
-            Press <kbd className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded text-[10px]">Ctrl+Enter</kbd> to send
-          </span>
-
-          <div className="flex items-center gap-2 ml-auto">
-            <Button
-              size="sm"
-              variant={composerMode === 'internal_note' ? 'secondary' : 'primary'}
-              onClick={handleSend}
-              isLoading={isSubmitting}
-              disabled={!replyText.trim()}
-              icon={Send}
-            >
-              {composerMode === 'internal_note' ? 'Save Note' : 'Send Reply'}
-            </Button>
-          </div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
