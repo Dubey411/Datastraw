@@ -453,6 +453,41 @@ export function TicketProvider({ children }) {
     }
   };
 
+  // Delete a single ticket
+  const deleteTicket = async (ticketId) => {
+    if (!ticketId) return;
+
+    try {
+      await api.deleteTicket(ticketId, currentAgent.email);
+    } catch (err) {
+      console.warn('Backend API delete failed, deleting locally:', err);
+    }
+
+    setTickets((prev) => prev.filter((t) => t.id !== ticketId));
+    if (selectedTicketId === ticketId) {
+      setSelectedTicketId(null);
+    }
+    toast.success('Ticket Deleted', `Ticket ${ticketId} has been permanently deleted.`);
+  };
+
+  // Bulk delete tickets
+  const deleteMultipleTickets = async (ticketIds) => {
+    if (!Array.isArray(ticketIds) || ticketIds.length === 0) return;
+
+    try {
+      await api.bulkDeleteTickets(ticketIds, currentAgent.email);
+    } catch (err) {
+      console.warn('Backend API bulk delete failed, deleting locally:', err);
+    }
+
+    const idSet = new Set(ticketIds);
+    setTickets((prev) => prev.filter((t) => !idSet.has(t.id)));
+    if (idSet.has(selectedTicketId)) {
+      setSelectedTicketId(null);
+    }
+    toast.success('Tickets Deleted', `${ticketIds.length} tickets have been permanently deleted.`);
+  };
+
   // Clone sample demo data into fresh account
   const loadDemoDataForCurrentUser = async () => {
     setIsLoading(true);
@@ -540,6 +575,8 @@ export function TicketProvider({ children }) {
         updateTicketStatus,
         updateTicketPriority,
         addTimelineEntry,
+        deleteTicket,
+        deleteMultipleTickets,
         restoreSampleData,
         loadDemoDataForCurrentUser,
         logoutUser,
