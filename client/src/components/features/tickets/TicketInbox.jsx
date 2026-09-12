@@ -16,6 +16,7 @@ import {
   Layers,
   CircleDot,
   CheckCircle2,
+  Trash2,
 } from 'lucide-react';
 import { cn } from '../../../utils/cn';
 
@@ -40,6 +41,7 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
     isLoading,
     isFreshWorkspace,
     loadDemoDataForCurrentUser,
+    deleteMultipleTickets,
   } = useTickets();
 
   const [activeViewMode, setActiveViewMode] = useState('list'); // 'list' | 'kanban' | 'analytics'
@@ -69,6 +71,15 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
 
   const isAllSelected =
     filteredTickets.length > 0 && selectedTicketIds.size === filteredTickets.length;
+
+  const handleBulkDelete = async () => {
+    if (selectedTicketIds.size === 0) return;
+    const count = selectedTicketIds.size;
+    if (window.confirm(`Are you sure you want to permanently delete ${count} selected ticket${count > 1 ? 's' : ''}? This cannot be undone.`)) {
+      await deleteMultipleTickets(Array.from(selectedTicketIds));
+      setSelectedTicketIds(new Set());
+    }
+  };
 
   const tabs = [
     { id: 'All', label: 'All Tickets', count: tabCounts.All },
@@ -432,9 +443,19 @@ export function TicketInbox({ onOpenCreateModal, onOpenAnalytics }) {
           <strong className="text-slate-700 dark:text-slate-200 font-semibold">{tabCounts[statusFilter] ?? tabCounts.All}</strong> tickets
         </span>
         {selectedTicketIds.size > 0 && (
-          <span className="text-indigo-600 dark:text-indigo-400 font-medium">
-            {selectedTicketIds.size} selected
-          </span>
+          <div className="flex items-center gap-2.5">
+            <span className="text-indigo-600 dark:text-indigo-400 font-semibold">
+              {selectedTicketIds.size} selected
+            </span>
+            <button
+              type="button"
+              onClick={handleBulkDelete}
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-colors shadow-2xs"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Selected</span>
+            </button>
+          </div>
         )}
       </div>
     </div>
