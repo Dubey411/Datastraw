@@ -8,9 +8,13 @@ import { AuthPage } from './components/features/auth/AuthPage';
 
 function AppContent() {
   const getRouteFromHash = () => {
-    const hash = window.location.hash.replace(/^#/, '');
-    if (['landing', 'login', 'signup', 'app'].includes(hash)) {
-      return hash;
+    const rawHash = window.location.hash.replace(/^#/, '');
+    if (rawHash.includes('access_token=') || rawHash.startsWith('app')) {
+      return 'app';
+    }
+    const cleanRoute = rawHash.split('?')[0].split('&')[0];
+    if (['landing', 'login', 'signup', 'app'].includes(cleanRoute)) {
+      return cleanRoute;
     }
     return 'landing';
   };
@@ -19,10 +23,15 @@ function AppContent() {
 
   useEffect(() => {
     const handleHashChange = () => {
-      const hash = window.location.hash.replace(/^#/, '');
-      if (['landing', 'login', 'signup', 'app'].includes(hash)) {
-        setCurrentRoute(hash);
-      } else if (!hash) {
+      const rawHash = window.location.hash.replace(/^#/, '');
+      if (rawHash.includes('access_token=') || rawHash.startsWith('app')) {
+        setCurrentRoute('app');
+        return;
+      }
+      const cleanRoute = rawHash.split('?')[0].split('&')[0];
+      if (['landing', 'login', 'signup', 'app'].includes(cleanRoute)) {
+        setCurrentRoute(cleanRoute);
+      } else if (!cleanRoute) {
         setCurrentRoute('landing');
       }
     };
