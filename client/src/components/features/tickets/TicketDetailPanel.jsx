@@ -29,6 +29,7 @@ import {
   AlertCircle,
   FileText,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 
 export function TicketDetailPanel({ ticket, onClose }) {
@@ -36,6 +37,7 @@ export function TicketDetailPanel({ ticket, onClose }) {
     updateTicketStatus,
     updateTicketPriority,
     addTimelineEntry,
+    deleteTicket,
     currentAgent,
   } = useTickets();
 
@@ -43,6 +45,7 @@ export function TicketDetailPanel({ ticket, onClose }) {
   const [replyText, setReplyText] = useState('');
   const [copiedEmail, setCopiedEmail] = useState(false);
   const [attachments, setAttachments] = useState([]);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [isMacrosOpen, setIsMacrosOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -165,14 +168,49 @@ export function TicketDetailPanel({ ticket, onClose }) {
           />
         </div>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
-          aria-label="Close ticket panel"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        <div className="flex items-center gap-1.5">
+          {isConfirmingDelete ? (
+            <div className="flex items-center gap-1 bg-rose-50 dark:bg-rose-950/60 px-2 py-1 rounded-lg border border-rose-200 dark:border-rose-800 text-xs animate-in fade-in zoom-in-95 duration-150">
+              <span className="text-rose-600 dark:text-rose-400 text-[11px] font-semibold">Delete?</span>
+              <button
+                type="button"
+                onClick={async () => {
+                  await deleteTicket(ticket.id);
+                  onClose();
+                }}
+                className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded text-[11px] font-semibold transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsConfirmingDelete(false)}
+                className="px-1.5 py-0.5 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 text-[11px] transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsConfirmingDelete(true)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+              title="Delete ticket"
+              aria-label="Delete ticket"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+            aria-label="Close ticket panel"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
       </div>
 
       {/* Main Scrollable Area */}
