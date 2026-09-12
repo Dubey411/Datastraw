@@ -3,6 +3,7 @@ import { cn } from '../../../utils/cn';
 import { useTheme } from '../../../context/ThemeContext';
 import { useToast } from '../../../context/ToastContext';
 import { DashboardPreviewMockup } from '../landing/DashboardPreviewMockup';
+import { signInWithGoogle, isSupabaseConfigured } from '../../../services/supabaseClient';
 import {
   Hexagon,
   Mail,
@@ -51,13 +52,33 @@ export function AuthPage({ initialMode = 'login', onNavigate }) {
     }, 600);
   };
 
-  const handleSocialLogin = (provider) => {
+  const handleSocialLogin = async (provider) => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-      toast.success(`Authenticated with ${provider}`, 'Logged in as Shubham Dubey.');
-      onNavigate('app');
-    }, 500);
+    if (provider === 'Google') {
+      try {
+        if (isSupabaseConfigured) {
+          toast.info('Connecting to Google...', 'Redirecting to Google secure authentication.');
+          await signInWithGoogle();
+          return;
+        } else {
+          toast.info('Google Sign-In', 'Logged in as Shubham Dubey (Add VITE_SUPABASE_ANON_KEY to client/.env for live OAuth redirect).');
+          setTimeout(() => {
+            setIsLoading(false);
+            onNavigate('app');
+          }, 400);
+        }
+      } catch (err) {
+        console.error('Google OAuth error:', err);
+        toast.error('Authentication Error', err.message || 'Failed to sign in with Google.');
+        setIsLoading(false);
+      }
+    } else {
+      setTimeout(() => {
+        setIsLoading(false);
+        toast.success(`Authenticated with ${provider}`, 'Logged in as Shubham Dubey.');
+        onNavigate('app');
+      }, 500);
+    }
   };
 
   const handleForgotPassword = (e) => {
